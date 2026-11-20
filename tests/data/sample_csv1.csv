@@ -1,0 +1,32 @@
+Report Date,Expense Division,CC code,Cost Center,Component,Cost [CAD]
+1/31/2017,Asia,7517,7517 - 161 Actuarial,Terminal Server,12.03309715
+1/31/2017,Asia,9741,9741 - Valuation Systm Transformation,Core,707.29787
+1/31/2017,Asia,9741,9741 - Valuation Systm Transformation,Compute Server,8322.718956
+1/31/2017,Canadian,6821,6821 - Actuarial - Calm,Compute License,1.018560096
+1/31/2017,Canadian,6640,6640 - Seg Fund Hedging,Compute License,16030.18462
+1/31/2017,Canadian,6640,6640 - Seg Fund Hedging,Compute Server,71448.95413
+1/31/2017,Group,9679,9679 - A&R and Risk Methodology,Compute License,39.45222771
+1/31/2017,Group,9642,9642 - Regional Operations,Compute Server,2872.010426
+1/31/2017,Group,9590,9590 - Segregated Funds,Compute Server,7234.419834
+1/31/2017,Investments,3825,3825 - Global ALM,Core,707.29787
+1/31/2017,Investments,3825,3825 - Global ALM,Compute License,14117.19404
+1/31/2017,Investments,3825,3825 - Global ALM,Compute Server,62922.46616
+1/31/2017,US,0336,0336 - Pricing Signature,Compute License,0.31507459
+1/31/2017,US,4363,4363 - Growth Initiative-Product,Compute License,0.589950007
+1/31/2017,US,4604,4604 - US Infrastructure I&O,Storage,49124.06443
+1/31/2017,US,4743,4743 - US Division SS Actuarial,Compute Server,146580.6849
+2/28/2017,Asia,7517,7517 - 161 Actuarial,Compute License,21.26433601
+2/28/2017,Asia,7517,7517 - 161 Actuarial,Compute Server,80.90870953
+2/28/2017,Asia,9741,9741 - Valuation Systm Transformation,Terminal Server,5705.77676
+2/28/2017,Asia,8143,8143 - LS02 Actuarial,Compute Server,5962.887825
+2/28/2017,Asia,9741,9741 - Valuation Systm Transformation,Compute Server,7438.169999
+2/28/2017,Canadian,0844,0844 - Par Actuarial,Compute License,0.10444699
+2/28/2017,Canadian,0844,0844 - Par Actuarial,Compute Server,0.397410538
+2/28/2017,Canadian,6641,6641 - Risk Management,Terminal Server,1.874390678
+2/28/2017,Canadian,0861,0861 - Inforce Pricing,Core,245.8413382
+2/28/2017,Canadian,0190,0190 - Retail Pricing,Core,245.8413382
+2/28/2017,Group,9642,9642 - Regional Operations,Compute Server,431.7508845
+2/28/2017,Group,9590,9590 - Segregated Funds,Core,491.6826763
+2/28/2017,Group,0262,0262 - Corp Capital Management,Compute License,790.696525
+2/28/2017,Group,9590,9590 - Segregated Funds,Core,491.6826763
+2/28/2017,Group,0262,0262 - Corp Capital Management,Compute License,
