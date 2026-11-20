@@ -6,13 +6,14 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://aberndsen.github.io/dataspector/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aberndsen/dataspector/blob/main/LICENSE)
 
-**DataSpector** is a format-agnostic Python toolkit for **converting** legacy fixed-width and compressed mainframe/COBOL files into modern human-readable formats and **enforcing data-integrity checks** across heterogeneous data sources (COBOL, CSV, fixed-width text, Excel, Parquet, JSON/JSONL, SQLite, and ODBC databases).
+**Read COBOL copybooks & mainframe extracts in pure Python** — decode EBCDIC, `COMP-3` packed decimals, binary integers, IBM HFP floats, and fixed-width files directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames**, and enforce format-agnostic data-integrity & Pandera validation checks across COBOL, CSV, Excel, Parquet, JSON, SQLite, and ODBC databases.
 
-## Highlights
+## Why DataSpector for COBOL & Mainframe Data?
 
-- **Convert mainframe & fixed-width COBOL files effortlessly (`coboller`)**: turn opaque EBCDIC, fixed-width, and binary-compressed files (`COMP-3` packed decimal, `COMP`/`COMP-5`/`COMP-X`, `COMP-6`, `COMP-1`/`COMP-2` IEEE & IBM HFP, `BINARY-*`, `FLOAT-*`, `PIC U` UTF-8, `PIC G` DBCS, `PIC 1` bitfields, `OCCURS`, `REDEFINES`) directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames** — via CLI or Python.
-- **Format-agnostic `GenericData` abstraction**: query existence, columns, modification timestamps, storage size, table/sheet lists, and stream records uniformly as `pandas.DataFrame` chunks across all supported formats.
-- **Pandera schema integration**: run declarative `pandera.DataFrameSchema` validations on any format via `record_validate_schema`, or auto-generate a Pandera schema directly from a COBOL copybook with `CopyBook.to_pandera_schema()`.
+- **Read COBOL & mainframe extracts with zero external runtime (`coboller`)**: pure-Python COBOL copybook parser and binary decoder — no JVM, no mainframe compiler, no manual byte-slicing scripts.
+- **Convert COBOL mainframe extracts to modern formats**: stream multi-gigabyte fixed-width or binary EBCDIC extracts (`cp500`, `cp037`, ASCII, UTF-8) directly into **CSV, TSV, JSONL, JSON, Excel, Parquet, or `pandas.DataFrame`** via a single CLI command (`coboller convert`) or Python call (`Copybook.convert()`).
+- **Handles strange real-world mainframe & COBOL data types**: `COMP-3` / `PACKED-DECIMAL`, `COMP-6`, `COMP`/`COMP-4`/`COMP-5`/`COMP-X`, `BINARY-CHAR/SHORT/LONG/DOUBLE`, `COMP-1`/`COMP-2` (IEEE 754 & IBM z/Architecture HFP), `FLOAT-SHORT`/`FLOAT-LONG`, signed zoned decimals (EBCDIC/ASCII/Micro Focus overpunch & separate signs), numeric-edited (`DECIMAL-POINT IS COMMA`), external floats, `PIC N` UTF-16, `PIC U` UTF-8 + `BYTE-LENGTH`, `PIC G` DBCS, `PIC 1` `USAGE BIT`, `POINTER`/`INDEX`, nested `OCCURS`, `REDEFINES` overlays, and level-88 condition names.
+- **Format-agnostic `GenericData` & Pandera validation**: query metadata, stream chunks uniformly across formats, validate any dataset with `pandera.DataFrameSchema` (`record_validate_schema`), or auto-generate a Pandera schema straight from a COBOL copybook via `Copybook.to_pandera_schema()`.
 - **Excel driver & reporting**: configure batch integrity checks in an Excel workbook, execute sequentially or in parallel, and export color-coded Excel reports.
 
 ## Installation
@@ -38,9 +39,9 @@ pip install "dataspector[odbc]"   # pyodbc support for SQL Server / MS Access
 pip install "dataspector[docs]"   # Sphinx + PyData theme documentation dependencies
 ```
 
-## Converting Fixed-Width & Compressed COBOL Files (`coboller`)
+## Read & Convert COBOL Mainframe Extracts (`coboller`)
 
-Mainframe extracts are often unreadable binary/EBCDIC blobs packed with `COMP-3`, `COMP`, and floating-point fields:
+Mainframe extracts are often unreadable binary/EBCDIC blobs packed with `COMP-3` decimals, binary `COMP` integers, and floating-point fields:
 
 ```text
 b'\xd5\xc1\xf1\xf0\xf0\xf0\xf0\xf0\xf1\xf7@@\xc1\xf2\xf0\xf2\xf4\xf0\xf1\xf1\xf5\xf0\xf0\xf1\xf2\xf5\xf5\xc0\x00$\x00\x0b^(=.\x14{?\xf0'
@@ -127,9 +128,11 @@ assert results.all_passed
 
 ### Batch Checks via Excel Driver CLI
 
+Define multiple data sources and checks in an Excel workbook (see the sample [test_driver.xlsx](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
+
 ```bash
-uv run dataspector --driver test_driver.xlsx --output report.xlsx
-uv run dataspector --config run.yaml
+dataspector --driver test_driver.xlsx --output report.xlsx
+dataspector --config run.yaml
 ```
 
 Key options (from `DataSpectorSettings`):

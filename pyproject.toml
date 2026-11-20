@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "dataspector"
 dynamic = ["version"]
-description = "Data-format-agnostic data-integrity checker with comprehensive COBOL copybook, binary data, and Pandera schema validation support. Convert your COBOL mainframe extracts to a modern format with ease!"
+description = "Read COBOL copybooks and convert mainframe EBCDIC, COMP-3, and fixed-width extracts to CSV, Parquet, JSON, Excel, or pandas — with format-agnostic data-integrity and Pandera validation."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -17,23 +17,41 @@ maintainers = [
     { name = "Aaron Berndsen", email = "aaron.berndsen@gmail.com" },
 ]
 keywords = [
-    "data-quality",
-    "data-validation",
     "cobol",
+    "cobol-copybook",
     "copybook",
+    "copybook-parser",
+    "read-cobol",
+    "mainframe",
+    "mainframe-extract",
     "ebcdic",
     "comp-3",
+    "packed-decimal",
+    "zoned-decimal",
+    "ibm-hfp",
+    "fixed-width",
+    "cobol-to-csv",
+    "cobol-to-parquet",
+    "data-conversion",
+    "data-quality",
+    "data-validation",
     "pandas",
     "pandera",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Information Technology",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
     "Typing :: Typed",
 ]
 dependencies = [
