@@ -4,16 +4,24 @@ Usage Guide
 Installation
 ------------
 
-DataSpector is packaged with ``pyproject.toml`` and managed via ``uv``:
+Install DataSpector from `PyPI <https://pypi.org/project/dataspector/>`_:
 
 .. code-block:: bash
 
-   uv sync --dev
+   pip install dataspector
+   # or with uv
+   uv add dataspector
 
-Optional dependency groups:
+Optional extras:
 
-* ``uv sync --extra odbc`` — enables ``pyodbc`` for SQL Server and MS Access.
-* ``uv sync --extra docs`` — installs Sphinx, ``numpydoc``, and ``pydata-sphinx-theme``.
+* ``pip install "dataspector[odbc]"`` — enables ``pyodbc`` for SQL Server and MS Access.
+* ``pip install "dataspector[docs]"`` — installs Sphinx, ``numpydoc``, and ``pydata-sphinx-theme``.
+
+For local development from a repository checkout using ``uv``:
+
+.. code-block:: bash
+
+   uv sync --all-groups
 
 Locating Data Sources
 ---------------------
@@ -73,7 +81,10 @@ Running Checks from an Excel Driver File
 ----------------------------------------
 
 For batch validation across many sources, define locations and checks in an
-Excel workbook (see ``test_driver.xlsx`` in the repository root):
+Excel workbook — download the sample :download:`test_driver.xlsx <../../test_driver.xlsx>`
+(also viewable on `GitHub <https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx>`_,
+alongside the sample data files in
+`tests/data/ <https://github.com/aberndsen/dataspector/tree/main/tests/data>`_):
 
 1. **Location Details** (header on row 2): columns ``Location``, ``Source Name``,
    and ``Reader Arguments``.

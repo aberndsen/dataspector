@@ -128,9 +128,11 @@ assert results.all_passed
 
 ### Batch Checks via Excel Driver CLI
 
+Define multiple data sources and checks in an Excel workbook (see the sample [test_driver.xlsx](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
+
 ```bash
-uv run dataspector --driver test_driver.xlsx --output report.xlsx
-uv run dataspector --config run.yaml
+dataspector --driver test_driver.xlsx --output report.xlsx
+dataspector --config run.yaml
 ```
 
 Key options (from `DataSpectorSettings`):
