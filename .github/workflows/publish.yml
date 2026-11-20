@@ -1,0 +1,125 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Target package index
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Verify & Build Distributions
+    runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.12"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv & Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Bootstrap environment
+        run: make bootstrap UV_SYNC_FLAGS="--frozen"
+
+      - name: Run static checks
+        run: make static-check
+
+      - name: Run test suite
+        run: make test
+
+      - name: Build sdist and wheel
+        run: make build-package
+
+      - name: Smoke-test built wheel
+        run: |
+          WHEEL=$(ls dist/*.whl)
+          uv run --isolated --no-project --with "$WHEEL" python -c "import dataspector; print(dataspector.__version__)"
+          uv run --isolated --no-project --with "$WHEEL" dataspector --help
+          uv run --isolated --no-project --with "$WHEEL" coboller --help
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
+
+  attach-release-assets:
+    name: Attach Distributions to GitHub Release
+    needs: [build]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Upload sdist and wheel to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber --repo "${{ github.repository }}"
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build]
+    if: github.event_name == 'release' || inputs.target == 'pypi'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dataspector
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: [build]
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/dataspector
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

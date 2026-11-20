@@ -27,7 +27,7 @@ keywords = [
     "pandera",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -36,6 +36,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
+
+[project.urls]
+Homepage = "https://github.com/aberndsen/dataspector"
+Documentation = "https://aberndsen.github.io/dataspector/"
+Repository = "https://github.com/aberndsen/dataspector"
+Issues = "https://github.com/aberndsen/dataspector/issues"
 dependencies = [
     "chardet>=5.0.0",
     "jsonargparse>=4.30.0",
