@@ -1,12 +1,18 @@
-COBOL Copybooks & Data Conversion Guide
-=======================================
+.. meta::
+   :description: Pure-Python guide to reading COBOL copybooks and converting mainframe EBCDIC, COMP-3 packed decimal, binary COMP, IBM HFP float, OCCURS, and REDEFINES extracts into CSV, Parquet, JSON, Excel, or pandas DataFrames.
+   :keywords: read cobol in python, parse cobol copybook, convert cobol mainframe extract, decode ebcdic python, unpack comp-3, comp-6, comp-x, ibm hfp, redefines, occurs, cobol to csv, cobol to parquet
 
-The :mod:`dataspector.coboller` module (and its ``coboller`` CLI) turns
-fixed-width text and compressed binary mainframe files — including EBCDIC,
-``COMP-3`` packed decimals, binary ``COMP``/``COMP-5``/``COMP-X`` integers,
-``COMP-1``/``COMP-2`` floats, and ``REDEFINES`` overlays — into clean
+Read & Convert COBOL Mainframe Extracts (``coboller``)
+======================================================
+
+The :mod:`dataspector.coboller` package (and its ``coboller`` CLI) lets you
+**read COBOL copybooks and mainframe data extracts in pure Python** — turning
+opaque EBCDIC, fixed-width, and compressed binary mainframe files (including
+``COMP-3`` packed decimals, ``COMP-6``, binary ``COMP``/``COMP-5``/``COMP-X``
+integers, ``COMP-1``/``COMP-2`` IEEE & IBM HFP floats, signed zoned decimals,
+``OCCURS`` arrays, and ``REDEFINES`` overlays) into clean
 :class:`pandas.DataFrame` tables and human-readable **CSV, TSV, JSON/JSONL,
-Excel, or Parquet** files.
+Excel, or Parquet** files with zero JVM or external compiler dependencies.
 
 Interactive Exploration & Conversion Walkthrough
 ------------------------------------------------
