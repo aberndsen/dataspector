@@ -1,5 +1,11 @@
 # DataSpector
 
+[![PyPI version](https://img.shields.io/pypi/v/dataspector.svg)](https://pypi.org/project/dataspector/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dataspector.svg)](https://pypi.org/project/dataspector/)
+[![CI](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml/badge.svg)](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://aberndsen.github.io/dataspector/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aberndsen/dataspector/blob/main/LICENSE)
+
 **DataSpector** is a format-agnostic Python toolkit for **converting** legacy fixed-width and compressed mainframe/COBOL files into modern human-readable formats and **enforcing data-integrity checks** across heterogeneous data sources (COBOL, CSV, fixed-width text, Excel, Parquet, JSON/JSONL, SQLite, and ODBC databases).
 
 ## Highlights
@@ -11,17 +17,25 @@
 
 ## Installation
 
-DataSpector uses [`uv`](https://docs.astral.sh/uv/) for dependency and environment management:
+Install from [PyPI](https://pypi.org/project/dataspector/):
 
 ```bash
-uv sync --dev
+pip install dataspector
+# or with uv
+uv add dataspector
+```
+
+Or install from source for local development using [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+uv sync --all-groups
 ```
 
 Optional extras:
 
 ```bash
-uv sync --extra odbc   # pyodbc support for SQL Server / MS Access
-uv sync --extra docs   # Sphinx + PyData theme documentation dependencies
+pip install "dataspector[odbc]"   # pyodbc support for SQL Server / MS Access
+pip install "dataspector[docs]"   # Sphinx + PyData theme documentation dependencies
 ```
 
 ## Converting Fixed-Width & Compressed COBOL Files (`coboller`)
