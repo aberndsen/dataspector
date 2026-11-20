@@ -156,7 +156,7 @@ class Copybook:
     @property
     def record_length(self) -> int:
         """Total physical byte length of a single record."""
-        return sum(rec.byte_length * rec.occurs for rec in self.records if rec.redefines is None)
+        return _group_byte_length(self.records)
 
     def convert(
         self,
@@ -285,6 +285,7 @@ class Copybook:
                 if node.redefines is not None:
                     node_start = sibling_offsets.get(node.redefines, offset)
                     if not include_redefines:
+                        offset = max(offset, node_start + node.byte_length * node.occurs)
                         continue
                 else:
                     node_start = offset
@@ -318,8 +319,7 @@ class Copybook:
                             suffix=f"{suffix}{occ_suffix}",
                         )
 
-                if node.redefines is None:
-                    offset = curr
+                offset = max(offset, curr)
             return offset
 
         _walk(self.records, 0, is_redef_branch=False)
@@ -677,12 +677,11 @@ class Copybook:
             detected_ending,
         )
 
-        def _parse_record(raw_rec: bytes) -> list[Any]:
-            if len(raw_rec) < rec_len:
-                raw_rec = raw_rec + pad_byte * (rec_len - len(raw_rec))
-            return [
-                rf.field.decode_bytes(
-                    raw_rec[rf.offset : rf.offset + rf.byte_length],
+        def _decode_item(rf: ResolvedItem, raw_rec: bytes) -> Any:
+            raw_slice = raw_rec[rf.offset : rf.offset + rf.byte_length]
+            try:
+                return rf.field.decode_bytes(
+                    raw_slice,
                     encoding=resolved_encoding,
                     float_format=float_format,
                     byteorder=byteorder,
@@ -692,8 +691,15 @@ class Copybook:
                     dbcs_encoding=dbcs_encoding,
                     decimal_comma=resolved_decimal_comma,
                 )
-                for rf in resolved
-            ]
+            except ValueError:
+                if rf.is_redefines:
+                    return None
+                raise
+
+        def _parse_record(raw_rec: bytes) -> list[Any]:
+            if len(raw_rec) < rec_len:
+                raw_rec = raw_rec + pad_byte * (rec_len - len(raw_rec))
+            return [_decode_item(rf, raw_rec) for rf in resolved]
 
         rows: list[list[Any]] = []
         with datpath.open("rb") as fh:
@@ -782,8 +788,8 @@ class GroupItem:
 
     @property
     def byte_length(self) -> int:
-        """Physical byte width of a single occurrence of this group item (excluding redefines)."""
-        return sum(rec.byte_length * rec.occurs for rec in self.records if rec.redefines is None)
+        """Physical byte width of a single occurrence of this group item (including wider redefines)."""
+        return _group_byte_length(self.records)
 
     @property
     def level(self) -> int:
@@ -913,7 +919,9 @@ class ElementaryItem:
         elif self._usage in (Usage.COMP_6, Usage.COMP_X):
             self._signed = False
         else:
-            self._signed = self._expanded_pic.startswith("S")
+            self._signed = (
+                self._expanded_pic.startswith("S") or description.get("sign_mode") is not None
+            )
         self._sign_mode: SignMode = self._resolve_sign_mode(description)
         self._exponent: int = (
             compute_decimal_exponent(self._expanded_pic)
@@ -987,7 +995,7 @@ class ElementaryItem:
                 return 4
             if d <= 18:
                 return 8
-            return 16
+            return ((10**d - 1).bit_length() // 8) + 1
         if self._usage in (Usage.NATIONAL, Usage.DISPLAY_1):
             return len(self._expanded_pic) * 2
         if self._usage is Usage.UTF_8:
@@ -1412,6 +1420,21 @@ def _deduplicate_names(names: list[str]) -> list[str]:
         counts[name] = idx + 1
         unique.append(name if idx == 0 else f"{name}_{idx}")
     return unique
+
+
+def _group_byte_length(nodes: list[GroupItem | ElementaryItem]) -> int:
+    """Compute physical byte span of sibling items, accounting for wider ``REDEFINES``."""
+    offset = 0
+    sibling_offsets: dict[str, int] = {}
+    for node in nodes:
+        width = node.byte_length * node.occurs
+        if node.redefines is not None:
+            start = sibling_offsets.get(node.redefines, offset)
+            offset = max(offset, start + width)
+        else:
+            sibling_offsets[node.name] = offset
+            offset += width
+    return offset
 
 
 def _find_parent_group(

@@ -561,6 +561,7 @@ def test_cobol_edge_cases_and_line_endings(tmp_path: pathlib.Path) -> None:
         "01 REC.\n"
         "   05 AMT PIC S9(3)V99 COMP-3.\n"
         "   05 BIG-COMP PIC S9(20) COMP.\n"
+        "   05 HUGE-COMP PIC S9(37) COMP.\n"
         "   05 CNT PIC 9(2) OCCURS 2 TIMES.\n"
     )
     cnt_field = cbl.find_record("CNT")
@@ -569,7 +570,10 @@ def test_cobol_edge_cases_and_line_endings(tmp_path: pathlib.Path) -> None:
     assert_that(cnt_field.pic_to_fwf_kwargs()).is_length(2)
     big_comp = cbl.find_record("BIG-COMP")
     assert isinstance(big_comp, Field)
-    assert_that(big_comp.byte_length).is_equal_to(16)
+    assert_that(big_comp.byte_length).is_equal_to(9)
+    huge_comp = cbl.find_record("HUGE-COMP")
+    assert isinstance(huge_comp, Field)
+    assert_that(huge_comp.byte_length).is_equal_to(16)
 
     # Copybook with LF-terminated records and empty lines
     cbl_simple = CopyBook.from_string("01 R.\n   05 A PIC X(3).\n   05 B PIC 9(2).\n")
@@ -806,3 +810,45 @@ def test_cobol_aligned_names_and_classmethods(data_dir: pathlib.Path) -> None:
 
     with pytest.raises(ValueError, match="Could not parse"):
         coboller.ElementaryItem.from_clause("NOT A COBOL FIELD")
+
+
+def test_real_world_mainframe_extract_edge_cases(tmp_path: pathlib.Path) -> None:
+    """Cover wider REDEFINES, inactive REDEFINES overlays, LOW-VALUES/spaces, and overpunched edited decimals."""
+    assert_that(comp3_unpack(b"\x40\x40\x40")).is_equal_to(0)
+    assert_that(comp3_unpack(b"\x00\x00\x00")).is_equal_to(0)
+    assert_that(comp6_unpack(b"\x40\x40")).is_equal_to(0)
+    assert_that(comp6_unpack(b"\x00\x00")).is_equal_to(0)
+    assert_that(zoned_unpack(b"\x00\x00\x00", encoding="cp037")).is_equal_to(0)
+
+    # Explicit-decimal overpunched display numbers (e.g. PIC S9(3).99 in Cobrix)
+    assert_that(parse_numeric_edited("305.0L")).is_equal_to(-305.03)
+    assert_that(parse_numeric_edited("305.0C")).is_equal_to(305.03)
+    assert_that(parse_numeric_edited("L05.03")).is_equal_to(-305.03)
+    assert_that(parse_numeric_edited("C05.03")).is_equal_to(305.03)
+
+    # SIGN SEPARATE without 'S' in PIC
+    sep_item = coboller.ElementaryItem.from_clause(
+        "05 RATE PIC 99V99 SIGN IS LEADING SEPARATE CHARACTER."
+    )
+    assert_that(sep_item.signed).is_true()
+    assert_that(sep_item.byte_length).is_equal_to(5)
+    assert_that(sep_item.decode_bytes(b"-1234")).is_equal_to(-12.34)
+
+    # Wider REDEFINES expands record_length and inactive REDEFINES returns None for invalid numeric overlay
+    cbl = coboller.Copybook.from_string(
+        "01 EXPORT-REC.\n"
+        "   05 REC-TYPE PIC X(1).\n"
+        "   05 PAYLOAD PIC X(3).\n"
+        "   05 NUM-OVERLAY REDEFINES PAYLOAD.\n"
+        "      10 AMT PIC S9(5) COMP-3.\n"
+        "      10 EXTRA PIC X(2).\n"
+    )
+    assert_that(cbl.record_length).is_equal_to(6)
+    dat = tmp_path / "multi.dat"
+    # Row 1: text record ('T', 'ABCDE') where AMT COMP-3 overlay is invalid ('ABC')
+    # Row 2: numeric record ('N', packed 12345 + 'OK')
+    dat.write_bytes(b"TABCDE" + b"N" + comp3_pack(12345, 5) + b"OK")
+    df = cbl.to_dataframe(dat, encoding="ascii", include_redefines=True, line_ending="none")
+    assert_that(df).is_length(2)
+    assert_that(pd.isna(df.loc[0, "AMT"])).is_true()
+    assert_that(df.loc[1, "AMT"]).is_equal_to(12345.0)

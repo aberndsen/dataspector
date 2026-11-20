@@ -14,6 +14,14 @@ integers, ``COMP-1``/``COMP-2`` IEEE & IBM HFP floats, signed zoned decimals,
 :class:`pandas.DataFrame` tables and human-readable **CSV, TSV, JSON/JSONL,
 Excel, or Parquet** files with zero JVM or external compiler dependencies.
 
+.. tip::
+
+   See the pre-executed Jupyter benchmark notebook
+   `notebooks/validate_mainframe_extracts.ipynb <https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb>`_
+   for an end-to-end validation of **69 COBOL copybooks** and **37 real-world
+   mainframe data extracts (5,863 records)** from **AWS Mainframe Modernization
+   CardDemo** and **ABSA Bank's Cobrix Test Suite** (100% pass rate).
+
 Interactive Exploration & Conversion Walkthrough
 ------------------------------------------------
 
