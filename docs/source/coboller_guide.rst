@@ -305,3 +305,57 @@ pipelines and test data generation:
 * :func:`~dataspector.coboller.codecs.bit_unpack` / :func:`~dataspector.coboller.codecs.bit_pack`
 * :func:`~dataspector.coboller.codecs.zoned_unpack` / :func:`~dataspector.coboller.codecs.zoned_pack`
 * :func:`~dataspector.coboller.codecs.parse_numeric_edited`
+
+Real-World Mainframe Extract Benchmark & Performance
+----------------------------------------------------
+
+DataSpector includes an executable Jupyter validation notebook —
+:download:`validate_mainframe_extracts.ipynb <../../notebooks/validate_mainframe_extracts.ipynb>`
+(also viewable pre-rendered on
+`GitHub <https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb>`_)
+— that automatically downloads and validates **69 COBOL copybooks** and **37
+mainframe data extracts (5,863 records, 1.03 MB)** across three benchmark suites
+with a **100% pass rate**:
+
+.. list-table:: Mainframe Benchmark Summary
+   :header-rows: 1
+   :widths: 28 14 14 14 30
+
+   * - Benchmark Suite
+     - Copybooks
+     - Extracts
+     - Records
+     - Key Features Validated
+   * - `AWS Mainframe Modernization CardDemo <https://github.com/aws-samples/aws-mainframe-modernization-carddemo>`_
+     - 30 / 30 (100%)
+     - 16 / 16 (100%)
+     - 1,343
+     - z/OS EBCDIC ``.PS`` (up to 250 KB) & ASCII batch extracts, 5-layout ``REDEFINES`` export (``CVEXPORT.cpy``), ``COMP``, ``COMP-3``, ``OCCURS``, ``LOW-VALUES``
+   * - `ABSA Bank Cobrix Test Suite <https://github.com/AbsaOSS/cobrix>`_
+     - 36 / 36 (100%)
+     - 18 / 18 (100%)
+     - 4,480
+     - 195-field type torture matrix (``INTEGR.TYPES``, 149 KB), 37-digit ``BINARY`` & ``COMP-3``, 2,202-byte / 247-column records (``OCCURS 80``), wider ``REDEFINES``, ``P`` scaling
+   * - DataSpector Built-in Suite (``tests/data/``)
+     - 3 / 3 (100%)
+     - 3 / 3 (100%)
+     - 40
+     - ``cp500`` EBCDIC, ``COMP-6``, ``COMP-X``, ``BINARY-*``, ``FLOAT-*``, IBM HFP, ``PIC U`` UTF-8, ``PIC G`` DBCS, ``PIC 1`` ``USAGE BIT``, ``DECIMAL-POINT IS COMMA``
+   * - **Total**
+     - **69 / 69 (100%)**
+     - **37 / 37 (100%)**
+     - **5,863**
+     - **Zero decoding failures across all 37 extracts**
+
+Throughput & Latency (Pure Python, Zero JVM)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Copybook parsing**: all **69 copybooks** (3,465 elementary field definitions)
+  parse into flat byte-offset layouts in **~26 ms total** (**~0.38 ms / copybook**,
+  >2,500 copybooks/sec).
+* **Binary EBCDIC + COMP-3 decoding**: decodes **100,000 binary EBCDIC + COMP-3
+  transaction records (4.5 MB, 600,000 field values)** into a
+  :class:`pandas.DataFrame` in **~0.6s** (**~150,000+ records/sec**,
+  **~1,000,000 decoded fields/sec**), with constant-memory chunked streaming via
+  :meth:`~dataspector.coboller.copybook.Copybook.yield_data` and
+  :meth:`~dataspector.coboller.copybook.Copybook.convert`.

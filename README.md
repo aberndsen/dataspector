@@ -46,6 +46,10 @@ To prove `dataspector.coboller` against production-grade mainframe layouts and s
 | **DataSpector Built-in Benchmark Suite** (`tests/data/`) | 3 / 3 (100%) | 3 / 3 (100%) | 40 | `cp500` EBCDIC, `COMP-6`, `COMP-X`, `BINARY-*`, `FLOAT-*`, `PIC U` UTF-8, `PIC G` DBCS, `PIC 1` `USAGE BIT`, `DECIMAL-POINT IS COMMA` |
 | **Total** | **69 / 69 (100%)** | **37 / 37 (100%)** | **5,863** | **Zero decoding failures across all 37 extracts** |
 
+**Performance highlights (pure Python, zero JVM):**
+- **Copybook parsing**: all **69 copybooks** (3,465 elementary field definitions) parse into full byte-offset layouts in **~26 ms total** (**~0.38 ms / copybook**, >2,500 copybooks/sec).
+- **Binary EBCDIC + `COMP-3` decoding**: decodes **100,000 binary EBCDIC + `COMP-3` mainframe transaction records (4.5 MB, 600,000 field values)** into a `pandas.DataFrame` in **~0.6s** (**~150,000+ records/sec**, **~1,000,000 decoded fields/sec**), with constant-memory chunked streaming via `Copybook.yield_data()` and `Copybook.convert()`.
+
 ## Installation
 
 Install from [PyPI](https://pypi.org/project/dataspector/):

@@ -42,13 +42,15 @@ Or directly from the command line:
    :maxdepth: 2
    :hidden:
 
-   user_guide
+   usage
    api/index
 
 Contents
 --------
 
-* :doc:`user_guide` — COBOL conversion guide, CLI/Python usage, and built-in checks reference.
+* :doc:`usage` — Installation, locating data sources, CLI/Python usage, Excel driver workbooks, and extending DataSpector.
+* :doc:`coboller_guide` — Reading COBOL copybooks, converting mainframe EBCDIC/COMP-3 extracts, and the 69-copybook / 37-extract benchmark.
+* :doc:`checks_guide` — Built-in source/record checks and Pandera schema integration.
 * :doc:`api/index` — Full API reference for ``core``, ``coboller``, ``checkers``, ``cli``, and ``settings``.
 
 Indices and tables
