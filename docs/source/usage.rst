@@ -143,3 +143,10 @@ Extend :class:`~dataspector.core.GenericData` so that its metadata properties
 (``exists``, ``columns``, ``last_modified``, ``list_of_tables``,
 ``number_of_records``) and :meth:`~dataspector.core.GenericData.yield_data`
 handle your format.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides & Benchmarks
+
+   coboller_guide
+   checks_guide

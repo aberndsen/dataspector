@@ -137,6 +137,8 @@ def comp3_unpack(
         raise ValueError("Cannot unpack empty COMP-3 byte sequence.")
 
     exp = -decimals if exponent is None else exponent
+    if all(b == 0x40 for b in raw) or all(b == 0x20 for b in raw) or all(b == 0x00 for b in raw):
+        return scale_integer(0, exp, as_decimal=as_decimal)
     digits: list[int] = []
     for byte in raw[:-1]:
         hi = (byte >> 4) & 0x0F
@@ -256,6 +258,8 @@ def comp6_unpack(
     if not raw:
         raise ValueError("Cannot unpack empty COMP-6 byte sequence.")
     exp = -decimals if exponent is None else exponent
+    if all(b == 0x40 for b in raw) or all(b == 0x20 for b in raw) or all(b == 0x00 for b in raw):
+        return scale_integer(0, exp, as_decimal=as_decimal)
     int_val = 0
     for byte in raw:
         hi = (byte >> 4) & 0x0F
@@ -583,6 +587,16 @@ def parse_numeric_edited(
 
     if not cleaned:
         return 0.0
+    if cleaned[-1] in ASCII_OVERPUNCH_POS:
+        cleaned = cleaned[:-1] + ASCII_OVERPUNCH_POS[cleaned[-1]]
+    elif cleaned[-1] in ASCII_OVERPUNCH_NEG:
+        negative = True
+        cleaned = cleaned[:-1] + ASCII_OVERPUNCH_NEG[cleaned[-1]]
+    elif cleaned[0] in ASCII_OVERPUNCH_POS:
+        cleaned = ASCII_OVERPUNCH_POS[cleaned[0]] + cleaned[1:]
+    elif cleaned[0] in ASCII_OVERPUNCH_NEG:
+        negative = True
+        cleaned = ASCII_OVERPUNCH_NEG[cleaned[0]] + cleaned[1:]
     val = float(cleaned)
     return -val if negative else val
 
@@ -702,6 +716,8 @@ def zoned_unpack(
     """
     if not raw:
         raise ValueError("Cannot unpack empty zoned decimal bytes.")
+    if all(b == 0x00 for b in raw):
+        return scale_integer(0, exponent, as_decimal=as_decimal)
 
     if signed and sign_mode in (SignMode.LEADING_SEPARATE, SignMode.TRAILING_SEPARATE):
         text = raw.decode(encoding).strip()
