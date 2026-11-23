@@ -1,5 +1,11 @@
-Checks & Pandera Integration
-============================
+Checks, Reporting & Pandera Integration
+=======================================
+
+DataSpector's data-quality engine was originally inspired by seeing an enterprise
+IT project spend millions of dollars on commercial data-governance and auditing
+platforms (such as Varonis) to monitor shared file drops and database tables —
+when a fast, open-source Python engine could enforce richer source, record, and
+cross-source integrity controls and produce audit-ready Excel reports for free.
 
 Built-in Check Catalog
 ----------------------
@@ -34,23 +40,28 @@ Record-Level Checks
 * :func:`~dataspector.checkers.record.record_field_date_between`
 * :func:`~dataspector.checkers.record.record_validate_schema` (powered by **Pandera**)
 
-Data-Integrity Framework Evaluation & Pandera Integration
----------------------------------------------------------
+Data-Integrity Design & Pandera Integration
+-------------------------------------------
 
-Modern Python offers mature DataFrame validation frameworks such as
-**Pandera**, **Great Expectations**, and **Pydantic**. After evaluating how they
-fit DataSpector's architecture:
+DataSpector pairs format-agnostic source and streaming record checks with
+`Pandera <https://pandera.readthedocs.io/>`_ declarative schemas:
 
-* **Pandera** was integrated directly into DataSpector because it is lightweight,
-  pandas-native, zero-infrastructure, supports YAML/JSON schema serialization,
-  and validates each streamed :class:`pandas.DataFrame` chunk cleanly.
-* **DataSpector's unique strengths** — format-agnostic :class:`~dataspector.core.GenericData`
-  loading, mainframe COBOL/EBCDIC/COMP-3 decoding, source-level file/DB checks,
-  cross-source comparisons, chunked streaming aggregation, and Excel driver/report
-  workflows — complement Pandera rather than duplicate it.
-* **Great Expectations** is well-suited for enterprise data-catalog platforms
-  with persistent metadata stores, but introduces substantial runtime weight
-  unnecessary for a lightweight CLI/library tool.
+* **Source, Cross-Source & Streaming Record Controls**: :class:`~dataspector.core.GenericData`
+  inspects file/table metadata (existence, modification timestamps, storage size,
+  column names, row counts) without loading full datasets into memory, and streams
+  records in fixed-size chunks through multi-chunk checks decorated with
+  :func:`~dataspector.checkers.utils.requires_all_data`.
+* **Automated Audit Reporting**: :func:`~dataspector.core.pretty_print_results`
+  renders instant terminal summaries, while :func:`~dataspector.core.write_excel_report`
+  exports color-coded Excel audit workbooks preserving the driver structure with
+  **Passed** (green ``TRUE`` / red ``FALSE``), diagnostic **Notes**, and
+  **Exceptions** columns.
+* **Declarative Pandera Schemas**: **Pandera** is lightweight, pandas-native,
+  zero-infrastructure, supports YAML/JSON schema serialization, and validates each
+  streamed :class:`pandas.DataFrame` chunk cleanly via
+  :func:`~dataspector.checkers.record.record_validate_schema` (including schemas
+  auto-generated from COBOL copybooks via
+  :meth:`~dataspector.coboller.copybook.Copybook.to_pandera_schema`).
 
 Using ``record_validate_schema``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

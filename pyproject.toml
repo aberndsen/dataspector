@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "dataspector"
 dynamic = ["version"]
-description = "Read COBOL copybooks and convert mainframe EBCDIC, COMP-3, and fixed-width extracts to CSV, Parquet, JSON, Excel, or pandas — with format-agnostic data-integrity and Pandera validation."
+description = "Format-agnostic data-quality and integrity checks with Excel audit reporting, plus pure-Python COBOL copybook and mainframe EBCDIC/COMP-3 extract conversion to CSV, Parquet, JSON, Excel, or pandas."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
