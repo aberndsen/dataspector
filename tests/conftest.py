@@ -60,20 +60,20 @@ def sample_sqlite() -> pathlib.Path:
 
 @pytest.fixture(scope="session")
 def sample_cobol_students() -> str:
-    """Return bracketed ``[copybook][data]`` locator for student COBOL data."""
-    return f"[{DATA_DIR / 'sample_cobol_students.cbl'}][{DATA_DIR / 'sample_cobol_students.dat'}]"
+    """Return unified ``cobol://copybook::data`` locator for student COBOL data."""
+    return f"cobol://{DATA_DIR / 'sample_cobol_students.cbl'}::{DATA_DIR / 'sample_cobol_students.dat'}"
 
 
 @pytest.fixture(scope="session")
 def sample_cobol_mainframe() -> str:
-    """Return bracketed ``[copybook][data]`` locator for binary EBCDIC mainframe data."""
-    return f"[{DATA_DIR / 'sample_cobol_mainframe.cbl'}][{DATA_DIR / 'sample_cobol_mainframe.dat'}]"
+    """Return unified ``cobol://copybook::data`` locator for binary EBCDIC mainframe data."""
+    return f"cobol://{DATA_DIR / 'sample_cobol_mainframe.cbl'}::{DATA_DIR / 'sample_cobol_mainframe.dat'}"
 
 
 @pytest.fixture(scope="session")
 def sample_cobol_exotic() -> str:
-    """Return bracketed ``[copybook][data]`` locator for exotic COBOL data types sample."""
-    return f"[{DATA_DIR / 'sample_cobol_exotic.cbl'}][{DATA_DIR / 'sample_cobol_exotic.dat'}]"
+    """Return unified ``cobol://copybook::data`` locator for exotic COBOL data types sample."""
+    return f"cobol://{DATA_DIR / 'sample_cobol_exotic.cbl'}::{DATA_DIR / 'sample_cobol_exotic.dat'}"
 
 
 @pytest.fixture(scope="session")

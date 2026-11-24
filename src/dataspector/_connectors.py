@@ -31,14 +31,6 @@ _JET_CONNECTIONS: tuple[str, ...] = (
     "DRIVER={Microsoft Access Driver (*.mdb)};DBQ=%s",
 )
 
-_SQL_MATCH = re.compile(
-    r"^\[(?P<server>.+?)\].*?\[[^\S\n]*(?P<database>.+?)\].*?\[[^\S\n]*(?P<table>.+?)\].*$",
-    re.I,
-)
-_EMBEDDED_DB_MATCH = re.compile(
-    r"^\[[^\S\n]*(?P<database>.+?)\].*?\[[^\S\n]*(?P<table>.+?)\].*$",
-    re.I,
-)
 _ENV_VAR_PATTERN = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 
 _FILE_SCHEMES: dict[str, str] = {
@@ -303,11 +295,11 @@ def connect_to_sqlalchemy_url(url: str) -> Engine | None:
 
 
 def resolve_location_with_options(
-    location: str | pathlib.Path | tuple[Any, ...] | DataSourceSpec | Mapping[str, Any],
+    location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any],
 ) -> tuple[pathlib.Path | coboller.Copybook | None, Any, str | None, dict[str, Any]]:
     """Resolve *location* into ``(path, engine, table, inferred_options)``.
 
-    Supports the following locator styles:
+    Supports the following unified locator styles:
 
     - Unified URI schemes for files (``csv://path``, ``tsv://path``, ``fwf://path``,
       ``excel://book.xlsx#Sheet1``, ``parquet://path``, ``json://path``,
@@ -315,14 +307,13 @@ def resolve_location_with_options(
     - Unified COBOL locators (``cobol://layout.cbl::data.dat`` or
       ``cobol://layout.cbl?data=data.dat&encoding=cp500``)
     - Unified SQL database URLs across any dialect (``sqlite:///db.sqlite#Table1``,
-      ``postgresql://user:pass@host:5432/db#public.users``,
+      ``postgresql+psycopg://user:pass@host:5432/db#public.users``,
       ``mysql+pymysql://user:pass@host/db#orders``,
+      ``snowflake://user:pass@account/db/schema?warehouse=WH#table``,
       ``mssql+pyodbc://server/db#accounts``, ``duckdb:///file.duckdb#events``,
       ``access://file.accdb#Orders``)
     - Structured :class:`DataSourceSpec` or ``dict`` specifications
     - Plain file paths with optional ``#Sheet`` / ``#Table`` fragment
-    - Legacy bracketed strings (``[file][table]``, ``[layout.cbl][data.dat]``,
-      ``[server][db][table]``) and tuples
 
     Parameters
     ----------
@@ -365,7 +356,7 @@ def resolve_location_with_options(
             )
 
         # 2. Check for plain path with #Sheet or #Table fragment (e.g. "workbook.xlsx#Sheet1")
-        if "#" in expanded and not expanded.startswith("["):
+        if "#" in expanded:
             base_str, table_frag, query_opts = _extract_fragment_and_query(expanded)
             base_path = resolve_cross_platform_path(base_str)
             if base_path.exists():
@@ -383,44 +374,7 @@ def resolve_location_with_options(
             copybook, _ = connect_to_copybook(loc_path)
             return (copybook if copybook is not None else loc_path), None, None, {}
 
-        # 4. Legacy bracketed syntax: [server][db][table] or [db_or_cbl][table_or_dat]
-        sql_m = _SQL_MATCH.match(expanded)
-        emb_m = _EMBEDDED_DB_MATCH.match(expanded)
-
-        if sql_m is not None:
-            server = sql_m.group("server")
-            database = sql_m.group("database")
-            table = sql_m.group("table")
-            return None, connect_to_server(server, database), table, {}
-
-        if emb_m is not None:
-            raw_db = emb_m.group("database")
-            raw_tbl = emb_m.group("table")
-            db_path = resolve_cross_platform_path(raw_db)
-            copybook, datapath = connect_to_copybook(db_path, raw_tbl)
-            if copybook is not None:
-                return copybook, datapath, None, {}
-            if db_path.exists():
-                return db_path, connect_to_embedded_db(db_path), raw_tbl, {}
-
         return loc_path, None, None, {}
-
-    if isinstance(location, tuple):
-        if len(location) >= 2:
-            copybook, datapath = connect_to_copybook(location[0], location[1])
-            if copybook is not None:
-                return copybook, datapath, None, {}
-
-            first_path = resolve_cross_platform_path(location[0])
-            if first_path.exists():
-                return first_path, connect_to_embedded_db(first_path), str(location[1]), {}
-
-            engine = connect_to_server(str(location[0]), str(location[1]))
-            table = str(location[2]) if len(location) > 2 else None
-            return None, engine, table, {}
-
-        if len(location) == 1:
-            return resolve_location_with_options(location[0])
 
     return None, None, None, {}
 
@@ -504,17 +458,15 @@ def _resolve_uri_scheme(
             raw_file_part = after_scheme.split("?", 1)[0]
             if raw_file_part and raw_file_part != "/:memory:":
                 candidate_str = (
-                    raw_file_part[1:]
-                    if (raw_file_part.startswith("/") and not raw_file_part.startswith("//"))
-                    else raw_file_part
+                    raw_file_part[1:] if raw_file_part.startswith("/") else raw_file_part
                 )
                 candidate = resolve_cross_platform_path(candidate_str)
                 if candidate.exists():
                     local_db_path = candidate
-                elif raw_file_part.startswith("//"):
-                    abs_candidate = resolve_cross_platform_path(raw_file_part[1:])
-                    if abs_candidate.exists():
-                        local_db_path = abs_candidate
+                else:
+                    direct_candidate = resolve_cross_platform_path(raw_file_part)
+                    if direct_candidate.exists():
+                        local_db_path = direct_candidate
 
         engine = connect_to_sqlalchemy_url(clean_db_url)
         return local_db_path, engine, frag_table, {}
@@ -569,7 +521,7 @@ def _resolve_spec(
 
 
 def connect_to_location(
-    location: str | pathlib.Path | tuple[Any, ...] | DataSourceSpec | Mapping[str, Any],
+    location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any],
 ) -> tuple[pathlib.Path | coboller.Copybook | None, Any, str | None]:
     """Resolve *location* into a ``(path, engine, table)`` triple.
 
@@ -577,9 +529,8 @@ def connect_to_location(
     ----------
     location
         File/directory path, unified URI locator (``'csv://...'``,
-        ``'cobol://layout.cbl::data.dat'``, ``'postgresql://...#table'``),
-        bracketed locator (``'[file][table]'``, ``'[layout.cbl][data.dat]'``,
-        ``'[server][db][table]'``), tuple, or :class:`DataSourceSpec`.
+        ``'excel://book.xlsx#Sheet1'``, ``'cobol://layout.cbl::data.dat'``,
+        ``'postgresql+psycopg://...#table'``), or :class:`DataSourceSpec`.
 
     Returns
     -------

@@ -102,7 +102,7 @@ Address any file, Excel sheet, COBOL copybook + extract pair, or SQL database ta
 | **COBOL Copybook + Data** | `cobol://layouts/acct.cbl::data/acct.dat?encoding=cp500&include_filler=false` |
 | **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`, `snowflake://user:${SF_PASS}@acct/db/schema?warehouse=WH#fact_sales`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://user:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
 
-*(All legacy bracketed locators such as `[workbook.xlsx][Sheet1]`, `[layout.cbl][extract.dat]`, and `[server][db][table]` remain 100% supported. See the [Supported Data Sources Guide](https://aberndsen.github.io/dataspector/data_sources.html) for full details.)*
+*(See the [Supported Data Sources Guide](https://aberndsen.github.io/dataspector/data_sources.html) for full details, `DataSourceSpec`, and v1.x → v2.0 migration notes.)*
 
 ## Read & Convert COBOL Mainframe Extracts (`coboller`)
 
@@ -208,15 +208,16 @@ dataspector.write_excel_report({"Sample CSV": results}, "audit_report.xlsx")
 ### Batch Auditing & Color-Coded Excel Reports via CLI
 
 Non-technical analysts and data engineers alike can manage enterprise check suites in an Excel driver workbook (see the sample [`test_driver.xlsx`](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
-- **`Location Details` sheet**: maps friendly source names (`Source Name`) to a **unified locator string** (or legacy bracketed syntax), along with optional `Reader Arguments`:
+- **`Location Details` sheet**: maps friendly source names (`Source Name`) to a **unified locator string**, along with optional `Reader Arguments`:
   - **Single files (auto or explicit scheme)**: `tests/data/sample_csv.csv`, `csv://drops/daily.dat`, `tsv://exports/tab.txt`, `fwf://extracts/fixed.txt?widths=[10,20,15]`, `parquet://lake/part.parquet`, `jsonl://logs/events.log`
-  - **Excel sheets & HDF5 keys**: `excel://workbook.xlsx#Sheet1` (or `workbook.xlsx#Sheet1`, `[workbook.xlsx][Sheet1]`), `hdf5://store.h5#measurements`
-  - **COBOL copybook + data extract pairs**: `cobol://layout.cbl::extract.dat?encoding=cp500` (or `[layout.cbl][extract.dat]`)
-  - **Embedded & Server SQL Databases (SQLite, Postgres, MySQL, MariaDB, SQL Server, Oracle, DuckDB, MS Access)**:
+  - **Excel sheets & HDF5 keys**: `excel://workbook.xlsx#Sheet1` (or `workbook.xlsx#Sheet1`), `hdf5://store.h5#measurements`
+  - **COBOL copybook + data extract pairs**: `cobol://layout.cbl::extract.dat?encoding=cp500`
+  - **Embedded & Server SQL Databases (SQLite, Postgres, MySQL, MariaDB, Snowflake, SQL Server, Oracle, DuckDB, MS Access)**:
     - `sqlite:///path/to/db.sqlite#Table1`
-    - `postgresql://user:${DB_PASS}@host:5432/warehouse#public.accounts`
+    - `postgresql+psycopg://user:${DB_PASS}@host:5432/warehouse#public.accounts`
     - `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`
-    - `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger` (or `[server][db][table]`)
+    - `snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales`
+    - `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger`
     - `duckdb:///analytics.duckdb#events` / `access://legacy.accdb#Orders`
 - **`Checks to Run` sheet**: lists each check, its `Keyword Arguments`, an active `Process` toggle (`Y`/`N`), and a `Severity` level (`Error` or `Warning`).
 

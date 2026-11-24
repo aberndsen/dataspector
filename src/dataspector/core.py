@@ -78,12 +78,7 @@ class GenericData:
 
     def __init__(
         self,
-        location: str
-        | pathlib.Path
-        | tuple[Any, ...]
-        | DataSourceSpec
-        | Mapping[str, Any]
-        | GenericData,
+        location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any] | GenericData,
         reader_options: dict[str, Any] | None = None,
     ) -> None:
         if isinstance(location, GenericData):
@@ -136,7 +131,7 @@ class GenericData:
                 else:
                     logger.warning(
                         "COBOL existence checks ideally verify both copybook and data via "
-                        "[layout.cbl][data.dat]."
+                        "cobol://layout.cbl::data.dat."
                     )
                     self._exist = self.path.exists
             elif self.engine is not None:
@@ -530,7 +525,7 @@ class CheckeredHistory:
 
     def __init__(
         self,
-        location: str | pathlib.Path | tuple[Any, ...] | GenericData,
+        location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any] | GenericData,
         checklist: list[Any] | str,
     ) -> None:
         gd = location if isinstance(location, GenericData) else GenericData(location)
@@ -691,7 +686,7 @@ def load_and_run_checks(
 
 
 def run_checks_on_location(
-    location: str | pathlib.Path | tuple[Any, ...] | GenericData,
+    location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any] | GenericData,
     checklist: list[Any] | str,
 ) -> CheckeredHistory:
     """Run all checks in *checklist* against *location*.

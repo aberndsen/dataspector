@@ -50,7 +50,7 @@ def test_generic_data_across_formats(
     assert_that(gd_csv_copy.last_modified).is_instance_of(datetime.datetime)
     assert_that(str(gd_csv_copy)).contains("GenericData")
 
-    gd_sql = GenericData(f"[{sample_sqlite}][Table1]")
+    gd_sql = GenericData(f"sqlite:///{sample_sqlite}#Table1")
     assert_that(gd_sql.exists).is_true()
     sql_cols = gd_sql.columns
     sql_tables = gd_sql.list_of_tables
@@ -59,7 +59,7 @@ def test_generic_data_across_formats(
     assert_that(sql_tables).contains("Table1")
     assert_that(gd_sql.number_of_records).is_equal_to(2)
 
-    gd_excel = GenericData(f"[{sample_excel}][Sheet1]")
+    gd_excel = GenericData(f"excel://{sample_excel}#Sheet1")
     assert_that(gd_excel.exists).is_true()
     excel_tables = gd_excel.list_of_tables
     excel_sheet_matches = gd_excel.fuzzy_find("sheet")
@@ -112,15 +112,15 @@ def test_connect_to_location_variants(
     sample_sqlite: pathlib.Path,
     data_dir: pathlib.Path,
 ) -> None:
-    """connect_to_location resolves tuples, bracketed strings, and Windows-style paths."""
-    p, e, t = connect_to_location((sample_sqlite, "Table1"))
+    """connect_to_location resolves unified URIs, DataSourceSpec, and Windows-style paths."""
+    p, e, t = connect_to_location(f"sqlite:///{sample_sqlite}#Table1")
     assert_that(p).is_equal_to(sample_sqlite)
     assert_that(str(e)).contains("sqlite")
     assert_that(t).is_equal_to("Table1")
 
-    # COBOL tuple
+    # COBOL unified URI
     cbl, dat, tbl = connect_to_location(
-        (data_dir / "sample_cobol_students.cbl", data_dir / "sample_cobol_students.dat")
+        f"cobol://{data_dir / 'sample_cobol_students.cbl'}::{data_dir / 'sample_cobol_students.dat'}"
     )
     assert_that(cbl).is_instance_of(dataspector.coboller.CopyBook)
     assert_that(dat).is_equal_to(data_dir / "sample_cobol_students.dat")
@@ -229,8 +229,8 @@ def test_core_edge_cases_and_cobol_only_source(
     except ValueError:
         pass
 
-    # Single-element tuple in connect_to_location
-    p, e, t = connect_to_location((data_dir / "sample_csv.csv",))
+    # Direct Path in connect_to_location
+    p, e, t = connect_to_location(data_dir / "sample_csv.csv")
     assert_that(p).is_equal_to(data_dir / "sample_csv.csv")
     assert_that(e).is_none()
     assert_that(t).is_none()
@@ -273,7 +273,7 @@ def test_generic_data_to_dataframe_and_convert(
     jsonl_out = gd_csv.convert(tmp_path / "csv_export.jsonl", chunksize=10)
     assert_that(pd.read_json(jsonl_out, lines=True)).is_length(31)
 
-    gd_sql = GenericData(f"[{sample_sqlite}][Table1]")
+    gd_sql = GenericData(f"sqlite:///{sample_sqlite}#Table1")
     csv_out = gd_sql.convert(tmp_path / "sql_export.csv")
     assert_that(pd.read_csv(csv_out)).is_length(2)
 
