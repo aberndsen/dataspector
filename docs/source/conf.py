@@ -212,7 +212,14 @@ def _generate_sitemap(app: object, exception: Exception | None) -> None:
         loc = html_baseurl if rel == "index.html" else f"{html_baseurl}{rel}"
         priority = (
             "1.0"
-            if rel in {"index.html", "consulting.html", "coboller_guide.html", "checks_guide.html"}
+            if rel
+            in {
+                "index.html",
+                "consulting.html",
+                "data_sources.html",
+                "coboller_guide.html",
+                "checks_guide.html",
+            }
             else "0.8"
         )
         urls.append(

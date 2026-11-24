@@ -15,22 +15,27 @@ import multiprocessing as mp
 import pathlib
 import re
 from collections import deque
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy import MetaData, Table, func, select
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 from sqlalchemy.engine import Engine
 
 from dataspector import checkers, coboller
 from dataspector._connectors import (
+    DataSourceSpec,
     connect_to_copybook,
     connect_to_embedded_db,
     connect_to_location,
     connect_to_server,
+    connect_to_sqlalchemy_url,
+    interpolate_env_vars,
     is_pyodbc_connection,
+    resolve_location_with_options,
 )
 from dataspector._reporting import (
     available_checks,
@@ -73,7 +78,12 @@ class GenericData:
 
     def __init__(
         self,
-        location: str | pathlib.Path | tuple[Any, ...] | GenericData,
+        location: str
+        | pathlib.Path
+        | tuple[Any, ...]
+        | DataSourceSpec
+        | Mapping[str, Any]
+        | GenericData,
         reader_options: dict[str, Any] | None = None,
     ) -> None:
         if isinstance(location, GenericData):
@@ -86,11 +96,12 @@ class GenericData:
             raw_location = location
 
         self._location: Any = raw_location
-        self.reader_options: dict[str, Any] | None = (
-            dict(reader_options) if reader_options else None
-        )
+        self.path, self.engine, self.table, uri_opts = resolve_location_with_options(raw_location)
 
-        self.path, self.engine, self.table = connect_to_location(raw_location)
+        merged_opts: dict[str, Any] = dict(uri_opts) if uri_opts else {}
+        if reader_options:
+            merged_opts.update(reader_options)
+        self.reader_options: dict[str, Any] | None = merged_opts if merged_opts else None
 
         self._tables: list[str] | None = None
         self._columns: list[Any] | None = None
@@ -205,9 +216,20 @@ class GenericData:
         """Total number of records in this source (cached after first computation)."""
         if self._number_of_records is None:
             nrecords = 0
-            if (
-                isinstance(self.engine, Engine) or is_pyodbc_connection(self.engine)
-            ) and self.table is not None:
+            if isinstance(self.engine, Engine) and self.table is not None:
+                schema_name: str | None = None
+                table_name = self.table
+                if "." in self.table:
+                    schema_name, table_name = self.table.split(".", 1)
+                if self.reader_options and "schema" in self.reader_options and schema_name is None:
+                    schema_name = str(self.reader_options["schema"])
+                tbl = Table(table_name, MetaData(), schema=schema_name)
+                stmt = select(func.count()).select_from(tbl)
+                with self.engine.connect() as conn:
+                    val = conn.execute(stmt).scalar()
+                    if val is not None:
+                        nrecords = int(val)
+            elif is_pyodbc_connection(self.engine) and self.table is not None:
                 qry = f"SELECT COUNT(*) AS Nrecords FROM [{self.table}]"
                 df = pd.read_sql_query(qry, self.engine)
                 if not df.empty:
@@ -418,7 +440,11 @@ class GenericData:
                 qry = f"SELECT * FROM [{self.table}]"
                 yield from pd.read_sql_query(qry, self.engine, chunksize=chunksize, **opts)
             elif isinstance(self.engine, Engine):
-                yield from pd.read_sql_table(self.table, self.engine, chunksize=chunksize, **opts)
+                table_name = self.table
+                if "." in self.table and "schema" not in opts:
+                    schema_part, table_name = self.table.split(".", 1)
+                    opts["schema"] = schema_part
+                yield from pd.read_sql_table(table_name, self.engine, chunksize=chunksize, **opts)
             return
 
         if not isinstance(self.path, pathlib.Path) or not self.path.is_file():
@@ -441,14 +467,30 @@ class GenericData:
         chunkable = {".csv", ".tsv", ".txt", ".hdf", ".h5"}
         delimited = {".csv", ".tsv", ".txt"}
 
-        explicit_type = opts.pop("reader_type", None)
-        if "widths" in opts:
+        raw_type = opts.pop("reader_type", None)
+        norm_type: str | None = None
+        if isinstance(raw_type, str):
+            low = raw_type.lower().strip()
+            if low in {"fwf", ".fwf", "fixed", "fixed_width", "fixed-width"}:
+                norm_type = "fwf"
+            elif low in {"excel", "xlsx", ".xlsx"}:
+                norm_type = ".xlsx"
+            elif low in {"hdf5", "hdf", "h5", ".h5", ".hdf"}:
+                norm_type = ".h5"
+            elif low in {"ndjson", "jsonl", ".jsonl"}:
+                norm_type = ".jsonl"
+            else:
+                norm_type = low if low.startswith(".") else f".{low}"
+
+        if "widths" in opts or norm_type == "fwf":
             reader: Any = pd.read_fwf
             is_chunkable = True
         else:
-            effective_suffix = explicit_type if explicit_type in readers else suffix
+            effective_suffix = norm_type if norm_type in readers else suffix
             reader = readers.get(effective_suffix)
             is_chunkable = effective_suffix in chunkable
+            if effective_suffix == ".tsv":
+                opts.setdefault("delimiter", "\t")
             if effective_suffix in delimited and "delimiter" not in opts and "sep" not in opts:
                 delim = self.determine_delimiter()
                 if delim is not None:
@@ -724,16 +766,20 @@ def _run_checks_on_location_star(args: tuple[Any, list[Any]]) -> CheckeredHistor
 
 __all__ = [
     "CheckeredHistory",
+    "DataSourceSpec",
     "GenericData",
     "available_checks",
     "connect_to_copybook",
     "connect_to_embedded_db",
     "connect_to_location",
     "connect_to_server",
+    "connect_to_sqlalchemy_url",
+    "interpolate_env_vars",
     "load_and_run_checks",
     "load_driverfile",
     "parse_cell_to_dict",
     "pretty_print_results",
+    "resolve_location_with_options",
     "run_checks_on_location",
     "version_adder",
     "write_excel_report",

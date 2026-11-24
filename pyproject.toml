@@ -40,6 +40,11 @@ keywords = [
     "excel-audit-report",
     "schema-drift",
     "data-validation",
+    "sqlalchemy",
+    "postgresql",
+    "mysql",
+    "duckdb",
+    "snowflake",
     "pandas",
     "pandera",
 ]
@@ -80,8 +85,32 @@ Issues = "https://github.com/aberndsen/dataspector/issues"
 "Author LinkedIn" = "https://www.linkedin.com/in/aberndsen/"
 
 [project.optional-dependencies]
+postgres = [
+    "psycopg[binary]>=3.1.0",
+]
+mysql = [
+    "pymysql>=1.1.0",
+]
+oracle = [
+    "oracledb>=2.0.0",
+]
+duckdb = [
+    "duckdb-engine>=0.13.0",
+]
+snowflake = [
+    "snowflake-sqlalchemy>=1.6.0",
+]
 odbc = [
     "pyodbc>=5.5.0",
+]
+parquet = [
+    "pyarrow>=15.0.0",
+]
+db = [
+    "psycopg[binary]>=3.1.0",
+    "pymysql>=1.1.0",
+    "oracledb>=2.0.0",
+    "duckdb-engine>=0.13.0",
 ]
 docs = [
     "numpydoc>=1.7.0",
