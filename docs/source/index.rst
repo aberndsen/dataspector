@@ -76,6 +76,7 @@ Or directly from the command line:
 
    usage
    api/index
+   consulting
 
 Contents
 --------
@@ -84,6 +85,7 @@ Contents
 * :doc:`coboller_guide` — Reading COBOL copybooks, converting mainframe EBCDIC/COMP-3 extracts, and the 69-copybook / 37-extract benchmark.
 * :doc:`checks_guide` — Built-in source/record checks and Pandera schema integration.
 * :doc:`api/index` — Full API reference for ``core``, ``coboller``, ``checkers``, ``cli``, and ``settings``.
+* :doc:`consulting` — Enterprise consulting, custom mainframe COBOL/EBCDIC migration pipelines, and automated data-governance audit solutions.
 
 Indices and tables
 ==================
