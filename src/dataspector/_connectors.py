@@ -307,9 +307,9 @@ def resolve_location_with_options(
     - Unified COBOL locators (``cobol://layout.cbl::data.dat`` or
       ``cobol://layout.cbl?data=data.dat&encoding=cp500``)
     - Unified SQL database URLs across any dialect (``sqlite:///db.sqlite#Table1``,
-      ``postgresql+psycopg://user:pass@host:5432/db#public.users``,
-      ``mysql+pymysql://user:pass@host/db#orders``,
-      ``snowflake://user:pass@account/db/schema?warehouse=WH#table``,
+      ``postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/db#public.users``,
+      ``mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host/db#orders``,
+      ``snowflake://${SF_USER}:${SF_PASS}@account/db/schema?warehouse=WH#table``,
       ``mssql+pyodbc://server/db#accounts``, ``duckdb:///file.duckdb#events``,
       ``access://file.accdb#Orders``)
     - Structured :class:`DataSourceSpec` or ``dict`` specifications

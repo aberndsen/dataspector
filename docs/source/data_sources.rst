@@ -48,13 +48,13 @@ Unified URI / Scheme Reference
        * ``"duckdb:///analytics/warehouse.duckdb#events"``
        * ``"access://legacy/finance.accdb#Orders"``
    * - **SQL Server, PostgreSQL, MySQL, MariaDB, Oracle & More**
-     - * ``"postgresql://user:${PG_PASS}@db.internal:5432/warehouse#public.users"``
-       * ``"postgresql+psycopg://user:${PG_PASS}@host:5432/prod#finance.ledger"``
-       * ``"mysql+pymysql://user:${MYSQL_PASS}@host:3306/shop#orders"``
-       * ``"mariadb+pymysql://user:${DB_PASS}@host:3306/app#audit_log"``
+     - * ``"postgresql://${PG_USER}:${PG_PASS}@db.internal:5432/warehouse#public.users"``
+       * ``"postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/prod#finance.ledger"``
+       * ``"mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders"``
+       * ``"mariadb+pymysql://${DB_USER}:${DB_PASS}@host:3306/app#audit_log"``
        * ``"mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts"``
-       * ``"oracle+oracledb://user:${ORA_PASS}@host:1521/service#transactions"``
-       * ``"snowflake://user:${SF_PASS}@account_id/database/schema?warehouse=COMPUTE_WH&role=ANALYST#fact_sales"``
+       * ``"oracle+oracledb://${ORA_USER}:${ORA_PASS}@host:1521/service#transactions"``
+       * ``"snowflake://${SF_USER}:${SF_PASS}@account_id/database/schema?warehouse=COMPUTE_WH&role=ANALYST#fact_sales"``
 
 .. tip::
 
@@ -66,7 +66,7 @@ Unified URI / Scheme Reference
 
    .. code-block:: text
 
-      postgresql+psycopg://readonly:${PG_PASSWORD}@db.internal:5432/prod#public.fact_sales
+      postgresql+psycopg://${PG_USER}:${PG_PASSWORD}@db.internal:5432/prod#public.fact_sales
       ${DATABASE_URL}#public.fact_sales
       cobol://${COPYBOOK_DIR}/acct.cbl::${EXTRACT_DIR}/acct.dat?encoding=cp500
 
@@ -94,19 +94,19 @@ matching your database:
      - ``sqlite:///path/to/db.sqlite#Table1``
    * - **PostgreSQL**
      - ``pip install "dataspector[postgres]"``
-     - ``postgresql+psycopg://user:${PASS}@host:5432/db#public.users``
+     - ``postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/db#public.users``
    * - **MySQL / MariaDB**
      - ``pip install "dataspector[mysql]"``
-     - ``mysql+pymysql://user:${PASS}@host:3306/db#orders``
+     - ``mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/db#orders``
    * - **Oracle** *(thin mode)*
      - ``pip install "dataspector[oracle]"``
-     - ``oracle+oracledb://user:${PASS}@host:1521/service#ledger``
+     - ``oracle+oracledb://${ORA_USER}:${ORA_PASS}@host:1521/service#ledger``
    * - **DuckDB**
      - ``pip install "dataspector[duckdb]"``
      - ``duckdb:///warehouse.duckdb#events``
    * - **Snowflake**
      - ``pip install "dataspector[snowflake]"``
-     - ``snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=WH#table``
+     - ``snowflake://${SF_USER}:${SF_PASS}@account_id/db/schema?warehouse=WH#table``
    * - **All pure-wheel SQL drivers**
      - ``pip install "dataspector[db]"``
      - Installs ``postgres``, ``mysql``, ``oracle``, and ``duckdb`` extras together
@@ -141,7 +141,7 @@ dataclass (or an equivalent ``dict``) directly to
    # 1. PostgreSQL table with explicit schema
    pg_source = GenericData(
        DataSourceSpec(
-           uri="postgresql+psycopg://readonly:${PG_PASS}@db.internal:5432/warehouse",
+           uri="postgresql+psycopg://${PG_USER}:${PG_PASS}@db.internal:5432/warehouse",
            format="postgres",
            table="finance.fact_transactions",
        )

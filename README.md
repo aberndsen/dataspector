@@ -96,7 +96,7 @@ Address any file, Excel sheet, COBOL copybook + extract pair, or SQL database ta
 | **Single Files** | `data/accounts.csv` *(auto)*, `csv://drops/daily.dat`, `tsv://exports/tab.txt`, `fwf://fixed.bin?widths=[10,20,15]`, `parquet://lake/events.parquet`, `jsonl://logs/stream.log` |
 | **Excel Sheets & HDF5** | `excel://reports/q1.xlsx#Sheet1` *(or `reports/q1.xlsx#Sheet1`)*, `hdf5://store/data.h5#measurements` |
 | **COBOL Copybook + Data** | `cobol://layouts/acct.cbl::data/acct.dat?encoding=cp500&include_filler=false` |
-| **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`, `snowflake://user:${SF_PASS}@acct/db/schema?warehouse=WH#fact_sales`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://user:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
+| **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders`, `snowflake://${SF_USER}:${SF_PASS}@acct/db/schema?warehouse=WH#fact_sales`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://${ORA_USER}:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
 
 *(See the [Supported Data Sources Guide](https://aberndsen.github.io/dataspector/data_sources.html) for full details, `DataSourceSpec`, and v1.x → v2.0 migration notes.)*
 
@@ -210,9 +210,9 @@ Non-technical analysts and data engineers alike can manage enterprise check suit
   - **COBOL copybook + data extract pairs**: `cobol://layout.cbl::extract.dat?encoding=cp500`
   - **Embedded & Server SQL Databases (SQLite, Postgres, MySQL, MariaDB, Snowflake, SQL Server, Oracle, DuckDB, MS Access)**:
     - `sqlite:///path/to/db.sqlite#Table1`
-    - `postgresql+psycopg://user:${DB_PASS}@host:5432/warehouse#public.accounts`
-    - `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`
-    - `snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales`
+    - `postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/warehouse#public.accounts`
+    - `mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders`
+    - `snowflake://${SF_USER}:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales`
     - `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger`
     - `duckdb:///analytics.duckdb#events` / `access://legacy.accdb#Orders`
 - **`Checks to Run` sheet**: lists each check, its `Keyword Arguments`, an active `Process` toggle (`Y`/`N`), and a `Severity` level (`Error` or `Warning`).
