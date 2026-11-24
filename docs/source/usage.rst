@@ -35,11 +35,11 @@ Locating Data Sources
 ---------------------
 
 :class:`~dataspector.core.GenericData` (and the ``Location`` column in Excel
-driver workbooks) supports a **unified URI/scheme locator syntax**, a structured
-:class:`~dataspector.core.DataSourceSpec` dataclass/dict, and backward-compatible
-bracketed or tuple locators across single files, COBOL copybook + data pairs, and
-any SQLAlchemy-compatible database flavour (SQLite, PostgreSQL, MySQL, MariaDB,
-SQL Server, Oracle, DuckDB, Snowflake, MS Access):
+driver workbooks) uses a **unified URI/scheme locator syntax** and a structured
+:class:`~dataspector.core.DataSourceSpec` dataclass/dict across single files,
+COBOL copybook + data pairs, and any SQLAlchemy-compatible database flavour
+(SQLite, PostgreSQL, MySQL, MariaDB, Snowflake, SQL Server, Oracle, DuckDB,
+MS Access):
 
 .. list-table:: Unified Locator Syntax
    :header-rows: 1
@@ -56,26 +56,23 @@ SQL Server, Oracle, DuckDB, Snowflake, MS Access):
    * - **Excel Sheets & HDF5 Keys**
      - * ``"excel://tests/data/sample_excel.xlsx#Sheet1"`` or ``"tests/data/sample_excel.xlsx#Sheet1"``
        * ``"hdf5://store/data.h5#measurements"``
-       * *(Legacy bracket syntax ``"[tests/data/sample_excel.xlsx][Sheet1]"`` is also supported)*
    * - **COBOL Copybook + Data Extract**
      - * ``"cobol://layout.cbl::records.dat"``
        * ``"cobol://layout.cbl::records.dat?encoding=cp500&include_filler=false"``
        * ``"cobol://layout.cbl?data=records.dat&encoding=cp500"``
-       * *(Legacy ``"[layout.cbl][records.dat]"`` and ``(Path("layout.cbl"), Path("records.dat"))`` are also supported)*
    * - **Embedded Databases (SQLite, DuckDB, MS Access)**
      - * ``"sqlite:///tests/data/sample_sqlite.sqlite#Table1"`` *(or ``?table=Table1``)*
        * ``"duckdb:///analytics.duckdb#events"``
        * ``"access://legacy.accdb#Orders"``
-       * *(Legacy ``"[tests/data/sample_sqlite.sqlite][Table1]"`` is also supported)*
-   * - **SQL Databases (Postgres, MySQL, MariaDB, MSSQL, Oracle, etc.)**
-     - * ``"postgresql://user:${DB_PASS}@db.internal:5432/warehouse#public.users"``
+   * - **SQL Databases (Postgres, MySQL, MariaDB, Snowflake, MSSQL, Oracle)**
+     - * ``"postgresql+psycopg://user:${DB_PASS}@db.internal:5432/warehouse#public.users"``
        * ``"mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders"``
        * ``"mariadb+pymysql://user:${DB_PASS}@host:3306/app#audit_log"``
+       * ``"snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"``
        * ``"mssql+pyodbc://server/database?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts"``
        * ``"oracle+oracledb://user:${DB_PASS}@host:1521/service#ledger"``
-       * *(Legacy SQL Server ``"[server][database][table]"`` is also supported)*
    * - **Structured Python / YAML Spec**
-     - ``DataSourceSpec(uri="postgresql://...", format="postgres", table="public.users", options={...})``
+     - ``DataSourceSpec(uri="postgresql+psycopg://...", format="postgres", table="public.users", options={...})``
 
 .. tip::
 

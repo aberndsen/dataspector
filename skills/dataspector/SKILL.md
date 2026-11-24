@@ -13,7 +13,7 @@ description: Pure-Python enterprise data-quality & integrity auditing engine wit
    - Streams directly into **CSV, TSV, JSONL, JSON, Excel (`.xlsx`), Parquet, or `pandas.DataFrame`**.
 2. **Format-Agnostic Data-Quality, Integrity & Drift Auditing (`dataspector` / `dataspector.checkers`)**:
    - Runs **22+ built-in source, record, cross-source reconciliation, and declarative Pandera schema checks** across CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, COBOL datasets, and SQL databases via SQLAlchemy (**SQLite, PostgreSQL, MySQL, MariaDB, SQL Server, Oracle, DuckDB, and MS Access**).
-   - Uses a **unified URI/scheme locator syntax** (`csv://`, `fwf://`, `excel://...#Sheet1`, `cobol://layout.cbl::extract.dat?encoding=cp500`, `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://...#orders`, `duckdb:///...#events`) and structured `DataSourceSpec` objects, with `${ENV_VAR}` interpolation and 100% backward compatibility with `[file][table]` brackets.
+   - Uses a **unified URI/scheme locator syntax** (`csv://`, `fwf://`, `excel://...#Sheet1`, `cobol://layout.cbl::extract.dat?encoding=cp500`, `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://...#orders`, `snowflake://...#table`, `duckdb:///...#events`) and structured `DataSourceSpec` objects, with `${ENV_VAR}` interpolation.
    - Supports business-friendly Excel driver workbooks (`Location Details` and `Checks to Run` sheets) and outputs color-coded Excel audit reports (`write_excel_report`) or terminal summaries (`pretty_print_results`).
 
 ## Installation

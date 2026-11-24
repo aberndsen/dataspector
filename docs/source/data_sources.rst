@@ -10,14 +10,13 @@ driver workbooks) accepts a **single, unified locator syntax** across flat
 files, spreadsheets, COBOL copybook + mainframe extract pairs, and any
 SQLAlchemy-compatible database backend.
 
-You can specify any data source in three interchangeable ways:
+You can specify any data source in two clean, interchangeable ways:
 
-1. **Unified URI / Scheme Strings** — ideal for the CLI, Excel driver
+1. **Unified URI / Scheme Strings** (or plain file paths with optional
+   ``#Sheet`` / ``#Table`` fragments) — ideal for the CLI, Excel driver
    workbooks (``test_driver.xlsx``), and concise Python calls.
 2. **Structured :class:`~dataspector.core.DataSourceSpec` (or ``dict``)** —
    ideal for typed Python pipelines and YAML/JSON configurations.
-3. **Plain Paths & Legacy Bracket / Tuple Locators** — 100% backward-compatible
-   with existing scripts and driver workbooks.
 
 Unified URI / Scheme Reference
 ------------------------------
@@ -181,22 +180,24 @@ Query parameters in unified URI strings (such as
 ``Reader Arguments`` column in an Excel driver workbook) override any matching
 inline query keys.
 
-Backward-Compatible Legacy Locators
------------------------------------
+Migrating from v1.x Bracket / Tuple Locators
+--------------------------------------------
 
-All pre-existing DataSpector locator formats remain 100% supported:
+In DataSpector **2.0**, the legacy bracketed (``[...][...]``) and tuple locator
+formats were removed in favor of the unified URI/scheme syntax and
+:class:`~dataspector.core.DataSourceSpec`:
 
-.. list-table:: Legacy Bracket & Tuple Syntax
+.. list-table:: v1.x to v2.0 Locator Migration
    :header-rows: 1
-   :widths: 35 65
+   :widths: 45 55
 
-   * - Format
-     - Legacy Equivalent
-   * - Excel workbook + sheet
-     - ``"[tests/data/sample_excel.xlsx][Sheet1]"`` or ``(Path("sample_excel.xlsx"), "Sheet1")``
-   * - SQLite / MS Access + table
-     - ``"[tests/data/sample_sqlite.sqlite][Table1]"`` or ``(Path("sample_sqlite.sqlite"), "Table1")``
-   * - COBOL copybook + data file
-     - ``"[layout.cbl][records.dat]"`` or ``(Path("layout.cbl"), Path("records.dat"))``
-   * - Remote SQL Server (ODBC templates)
-     - ``"[server][database][table]"`` or ``("server", "database", "table")``
+   * - Removed v1.x Syntax
+     - v2.0 Unified Replacement
+   * - ``"[workbook.xlsx][Sheet1]"`` / ``(path, "Sheet1")``
+     - ``"excel://workbook.xlsx#Sheet1"`` *(or ``"workbook.xlsx#Sheet1"``)*
+   * - ``"[db.sqlite][Table1]"`` / ``(path, "Table1")``
+     - ``"sqlite:///db.sqlite#Table1"``
+   * - ``"[layout.cbl][records.dat]"`` / ``(cbl, dat)``
+     - ``"cobol://layout.cbl::records.dat"``
+   * - ``"[server][database][table]"`` / ``(srv, db, tbl)``
+     - ``"mssql+pyodbc://server/database?driver=ODBC+Driver+18+for+SQL+Server#table"``

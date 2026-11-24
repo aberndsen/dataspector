@@ -69,11 +69,12 @@ jobs:
           echo "Commits since ${LAST_TAG}:"
           git log "${LAST_TAG}..HEAD" --oneline
 
-          # Only the pushed (HEAD) commit may opt out of a release. Older skipped
-          # commits still count toward the next bump once a releasable commit lands.
-          HEAD_MSG=$(git log -1 --pretty=format:"%s%n%b")
-          if echo "$HEAD_MSG" | grep -qiE '\[skip release\]|\[no release\]'; then
-            echo "HEAD commit requested [skip release]; skipping release."
+          # Only the pushed (HEAD) commit subject line may opt out of a release.
+          # Older skipped commits (or body prose mentioning "[skip release]") must
+          # not suppress a release once a releasable commit lands.
+          HEAD_SUBJECT=$(git log -1 --pretty=format:"%s")
+          if echo "$HEAD_SUBJECT" | grep -qiE '\[skip release\]|\[no release\]'; then
+            echo "HEAD commit subject requested [skip release]; skipping release."
             echo "released=false" >> "$GITHUB_OUTPUT"
             echo "tag=" >> "$GITHUB_OUTPUT"
             exit 0

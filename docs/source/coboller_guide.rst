@@ -278,10 +278,7 @@ Or combine COBOL parsing directly with :func:`~dataspector.core.run_checks_on_lo
    import dataspector
 
    history = dataspector.run_checks_on_location(
-       dataspector.GenericData(
-           "[tests/data/sample_cobol_mainframe.cbl][tests/data/sample_cobol_mainframe.dat]",
-           reader_options={"encoding": "cp500", "include_filler": False},
-       ),
+       "cobol://tests/data/sample_cobol_mainframe.cbl::tests/data/sample_cobol_mainframe.dat?encoding=cp500&include_filler=false",
        [
            ("source_exists", {}),
            ("record_count", {"nrows": 4}),

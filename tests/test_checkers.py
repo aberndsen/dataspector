@@ -40,7 +40,7 @@ def test_source_fuzzy_find(
         sample_csv, [("source_fuzzy_find", {"pattern": "*"})]
     )
     excel_found = dataspector.run_checks_on_location(
-        f"[{sample_excel}][Sheet1]", [("source_fuzzy_find", {"pattern": "sheet"})]
+        f"excel://{sample_excel}#Sheet1", [("source_fuzzy_find", {"pattern": "sheet"})]
     )
 
     assert_that(found.results[0]).is_true()
@@ -486,7 +486,7 @@ def test_checker_edge_cases_and_multichunk(tmp_path: pathlib.Path) -> None:
     # Non-file source_source_identical returns False cleanly
     o_id = checkers.source_source_identical(
         dataspector.GenericData(tmp_path / "missing1"),
-        dataspector.GenericData(("noserver", "nodb", "notable")),
+        dataspector.GenericData("postgresql://user:pass@noserver:5432/nodb#notable"),
     )
     assert_that(o_id.passed).is_false()
 
