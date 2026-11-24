@@ -14,7 +14,7 @@
 DataSpector combines **two complementary pillars** in a single, zero-infrastructure Python package:
 
 1. **Automated Data-Quality, Integrity & Drift Auditing (`dataspector`)**:
-   - **Source-level, record-level & cross-source controls**: verify file/table existence, modification recency, storage size tolerances, column counts, nullness, uniqueness, numeric/date ranges, conditional field rules, and cross-source schema/row-count consistency across **CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, SQLite, MS Access, SQL Server (ODBC), and COBOL datasets**.
+   - **Source-level, record-level & cross-source controls**: verify file/table existence, modification recency, storage size tolerances, column counts, nullness, uniqueness, numeric/date ranges, conditional field rules, and cross-source schema/row-count consistency across **CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, COBOL datasets, and SQL databases via SQLAlchemy (SQLite, PostgreSQL, MySQL, MariaDB, SQL Server, Oracle, DuckDB, and MS Access)** using a single [unified locator syntax](https://aberndsen.github.io/dataspector/data_sources.html).
    - **Business-friendly Excel driver & executive reporting**: define hundreds of checks across dozens of data sources in an Excel workbook ([`test_driver.xlsx`](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)), execute sequentially or in parallel (`--use_multiprocess true`), and generate color-coded, timestamped Excel audit reports with pass/fail summaries, diagnostic notes, and severity levels (`Error` / `Warning`).
    - **Declarative Pandera schema validation**: enforce `pandera.DataFrameSchema` rules (`record_validate_schema`) across streamed chunks — or auto-generate a Pandera schema directly from a COBOL copybook via `Copybook.to_pandera_schema()`.
 2. **Pure-Python COBOL & Mainframe Extract Conversion (`coboller`)**:
@@ -71,12 +71,31 @@ Or install from source for local development using [`uv`](https://docs.astral.sh
 uv sync --all-groups
 ```
 
-Optional extras:
+Optional extras (SQLite works out of the box; other SQL backends connect through SQLAlchemy):
 
 ```bash
-pip install "dataspector[odbc]"   # pyodbc support for SQL Server / MS Access
-pip install "dataspector[docs]"   # Sphinx + PyData theme documentation dependencies
+pip install "dataspector[postgres]"  # PostgreSQL (psycopg[binary])
+pip install "dataspector[mysql]"     # MySQL / MariaDB (pymysql)
+pip install "dataspector[oracle]"    # Oracle thin mode (oracledb)
+pip install "dataspector[duckdb]"    # DuckDB (duckdb-engine)
+pip install "dataspector[db]"        # All pure-wheel SQL drivers above
+pip install "dataspector[odbc]"      # SQL Server / MS Access (pyodbc)
+pip install "dataspector[parquet]"   # Apache Parquet (pyarrow)
+pip install "dataspector[docs]"      # Sphinx + PyData theme documentation dependencies
 ```
+
+## Unified Data-Source Locator Syntax
+
+Address any file, Excel sheet, COBOL copybook + extract pair, or SQL database table using one consistent URI syntax (or [`DataSourceSpec`](https://aberndsen.github.io/dataspector/data_sources.html)), with `${ENV_VAR}` interpolation so secrets never live in Excel driver workbooks:
+
+| Source Type | Unified Locator Examples |
+| --- | --- |
+| **Single Files** | `data/accounts.csv` *(auto)*, `csv://drops/daily.dat`, `tsv://exports/tab.txt`, `fwf://fixed.bin?widths=[10,20,15]`, `parquet://lake/events.parquet`, `jsonl://logs/stream.log` |
+| **Excel Sheets & HDF5** | `excel://reports/q1.xlsx#Sheet1` *(or `reports/q1.xlsx#Sheet1`)*, `hdf5://store/data.h5#measurements` |
+| **COBOL Copybook + Data** | `cobol://layouts/acct.cbl::data/acct.dat?encoding=cp500&include_filler=false` |
+| **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://user:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
+
+*(All legacy bracketed locators such as `[workbook.xlsx][Sheet1]`, `[layout.cbl][extract.dat]`, and `[server][db][table]` remain 100% supported. See the [Supported Data Sources Guide](https://aberndsen.github.io/dataspector/data_sources.html) for full details.)*
 
 ## Read & Convert COBOL Mainframe Extracts (`coboller`)
 
@@ -147,7 +166,7 @@ PosixPath('accounts.jsonl')
 
 ## Format-Agnostic Data-Integrity Checks & Automated Reporting (`dataspector`)
 
-DataSpector provides **22+ built-in data-quality checks** across three layers — plus full **Pandera** schema validation — over any format supported by `GenericData` (`CSV`, `TSV`, `Excel`, `Fixed-Width`, `Parquet`, `JSON/JSONL`, `HDF5`, `SQLite`, `MS Access`, `SQL Server via ODBC`, and `COBOL Copybook + Data Extract`):
+DataSpector provides **22+ built-in data-quality checks** across three layers — plus full **Pandera** schema validation — over any format supported by `GenericData` (`CSV`, `TSV`, `Excel`, `Fixed-Width`, `Parquet`, `JSON/JSONL`, `HDF5`, `COBOL Copybook + Data Extract`, and SQL databases via SQLAlchemy: `SQLite`, `PostgreSQL`, `MySQL/MariaDB`, `SQL Server`, `Oracle`, `DuckDB`, `MS Access`):
 
 | Check Category | Built-in Controls | What They Audit |
 | --- | --- | --- |

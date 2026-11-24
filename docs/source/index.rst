@@ -10,10 +10,12 @@ data-quality & integrity auditing** (``dataspector``) with **COBOL copybook &
 mainframe data extract conversion** (``coboller``):
 
 1. **Enforce format-agnostic data-integrity checks & automated audit reporting**
-   across CSV, Excel, fixed-width text, Parquet, JSON, HDF5, SQLite, MS Access,
-   ODBC databases, and COBOL datasets — inspired by replacing million-dollar
-   enterprise data-governance suites (like Varonis) with an open-source engine
-   that runs **22+ source, record, cross-source reconciliation, and declarative**
+   across CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, COBOL
+   datasets, and any SQLAlchemy database (**SQLite, PostgreSQL, MySQL, MariaDB,
+   SQL Server, Oracle, DuckDB, MS Access**) using a **unified URI locator syntax**
+   (see :doc:`data_sources`) — inspired by replacing million-dollar enterprise
+   data-governance suites (like Varonis) with an open-source engine that runs
+   **22+ source, record, cross-source reconciliation, and declarative**
    `Pandera <https://pandera.readthedocs.io/>`_ **schema checks** from Python or
    an Excel driver workbook and exports color-coded Excel audit reports.
 2. **Read & convert COBOL mainframe extracts in pure Python** — decode EBCDIC
@@ -52,6 +54,19 @@ Or run an entire multi-source audit suite in parallel from an Excel driver file:
 
    uv run dataspector --driver test_driver.xlsx --output report.xlsx --use_multiprocess true
 
+Address any file, COBOL extract, or SQL database using the same unified locator
+syntax (see :doc:`data_sources` for the full reference, ``DataSourceSpec``, and
+optional SQLAlchemy DB extras):
+
+.. code-block:: text
+
+   csv://drops/daily_drop.dat
+   excel://reports/q1.xlsx#Sheet1
+   cobol://layouts/acct.cbl::extracts/acct.dat?encoding=cp500
+   sqlite:///data/warehouse.sqlite#accounts
+   postgresql+psycopg://user:${PG_PASS}@db.internal:5432/prod#public.users
+   mysql+pymysql://user:${MYSQL_PASS}@host:3306/shop#orders
+
 Read & Convert a COBOL Mainframe Extract in 3 Lines
 ---------------------------------------------------
 
@@ -75,13 +90,15 @@ Or directly from the command line:
    :hidden:
 
    usage
+   data_sources
    api/index
    consulting
 
 Contents
 --------
 
-* :doc:`usage` — Installation, locating data sources, CLI/Python usage, Excel driver workbooks, and extending DataSpector.
+* :doc:`usage` — Installation, CLI/Python usage, Excel driver workbooks, and extending DataSpector.
+* :doc:`data_sources` — Unified URI/scheme locator syntax, ``DataSourceSpec``, ``${ENV_VAR}`` secret interpolation, and optional SQLAlchemy DB extras (PostgreSQL, MySQL/MariaDB, Oracle, DuckDB, SQL Server, SQLite, MS Access).
 * :doc:`coboller_guide` — Reading COBOL copybooks, converting mainframe EBCDIC/COMP-3 extracts, and the 69-copybook / 37-extract benchmark.
 * :doc:`checks_guide` — Built-in source/record checks and Pandera schema integration.
 * :doc:`api/index` — Full API reference for ``core``, ``coboller``, ``checkers``, ``cli``, and ``settings``.

@@ -12,10 +12,17 @@ Install DataSpector from `PyPI <https://pypi.org/project/dataspector/>`_:
    # or with uv
    uv add dataspector
 
-Optional extras:
+Optional extras (database backends connect through SQLAlchemy; SQLite works out
+of the box):
 
-* ``pip install "dataspector[odbc]"`` — enables ``pyodbc`` for SQL Server and MS Access.
-* ``pip install "dataspector[docs]"`` — installs Sphinx, ``numpydoc``, and ``pydata-sphinx-theme``.
+* ``pip install "dataspector[postgres]"`` — PostgreSQL (``psycopg[binary]``).
+* ``pip install "dataspector[mysql]"`` — MySQL / MariaDB (``pymysql``).
+* ``pip install "dataspector[oracle]"`` — Oracle thin mode (``oracledb``).
+* ``pip install "dataspector[duckdb]"`` — DuckDB (``duckdb-engine``).
+* ``pip install "dataspector[db]"`` — all pure-wheel SQLAlchemy DB drivers above.
+* ``pip install "dataspector[odbc]"`` — SQL Server and MS Access (``pyodbc``).
+* ``pip install "dataspector[parquet]"`` — Apache Parquet via ``pyarrow``.
+* ``pip install "dataspector[docs]"`` — Sphinx, ``numpydoc``, and ``pydata-sphinx-theme``.
 
 For local development from a repository checkout using ``uv``:
 
@@ -75,7 +82,8 @@ SQL Server, Oracle, DuckDB, Snowflake, MS Access):
    environment variables using ``${VAR_NAME}`` (for example,
    ``postgresql://readonly:${PG_PASSWORD}@db.internal:5432/prod#fact_sales`` or
    ``${DATABASE_URL}#fact_sales``) so credentials never need to be stored in
-   Excel driver workbooks.
+   Excel driver workbooks. See :doc:`data_sources` for the complete reference on
+   SQLAlchemy database backends, optional extras, and :class:`~dataspector.core.DataSourceSpec`.
 
 Running Checks from Python
 --------------------------
