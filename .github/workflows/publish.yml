@@ -109,11 +109,6 @@ jobs:
           git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
           git push origin "$NEW_TAG"
 
-          gh release create "$NEW_TAG" \
-            --title "$NEW_TAG" \
-            --generate-notes \
-            --verify-tag
-
           echo "released=true" >> "$GITHUB_OUTPUT"
           echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
@@ -186,10 +181,20 @@ jobs:
           name: release-dists
           path: dist/
 
-      - name: Upload sdist and wheel to GitHub Release
+      - name: Create or update GitHub Release with sdist and wheel
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$RELEASE_TAG" dist/* --clobber --repo "${{ github.repository }}"
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber --repo "${{ github.repository }}" || \
+              echo "::warning::Release $RELEASE_TAG is immutable; assets were not re-uploaded."
+          else
+            gh release create "$RELEASE_TAG" dist/* \
+              --title "$RELEASE_TAG" \
+              --generate-notes \
+              --verify-tag \
+              --repo "${{ github.repository }}"
+          fi
 
   publish-pypi:
     name: Publish to PyPI
