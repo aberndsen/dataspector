@@ -1,8 +1,4 @@
-# DataSpector
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/aberndsen/dataspector/main/docs/source/_static/dataspector-logo.png" alt="DataSpector logo" width="140">
-</p>
+# <img src="https://raw.githubusercontent.com/aberndsen/dataspector/main/docs/source/_static/dataspector-logo.png" alt="DataSpector logo" width="42" align="absmiddle"> DataSpector
 
 [![PyPI version](https://img.shields.io/pypi/v/dataspector.svg)](https://pypi.org/project/dataspector/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dataspector.svg)](https://pypi.org/project/dataspector/)
