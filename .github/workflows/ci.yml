@@ -93,6 +93,17 @@ jobs:
       - name: Bootstrap environment
         run: make bootstrap UV_SYNC_FLAGS="--frozen"
 
+      - name: Fetch latest tags for documentation version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          for i in 1 2 3 4 5; do
+            git fetch --tags --force
+            if [ -n "$(git tag --points-at HEAD 'v*')" ]; then
+              break
+            fi
+            sleep 2
+          done
+
       - name: Build documentation and distributions
         run: make build
 

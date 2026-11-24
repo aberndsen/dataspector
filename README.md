@@ -6,43 +6,47 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://aberndsen.github.io/dataspector/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aberndsen/dataspector/blob/main/LICENSE)
 
-**Read COBOL copybooks & mainframe extracts in pure Python** — decode EBCDIC, `COMP-3` packed decimals, binary integers, IBM HFP floats, and fixed-width files directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames**, and enforce format-agnostic data-integrity & Pandera validation checks across COBOL, CSV, Excel, Parquet, JSON, SQLite, and ODBC databases.
+**Enterprise data-quality & integrity checks (`dataspector`) and pure-Python COBOL copybook & mainframe extract conversion (`coboller`)** — audit files, spreadsheets, databases, and legacy extracts with automated Excel reporting, and decode binary EBCDIC, `COMP-3` packed decimals, binary integers, IBM HFP floats, and fixed-width files directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames**.
 
-## Why DataSpector for COBOL & Mainframe Data?
+## Why DataSpector?
 
-- **Read COBOL & mainframe extracts with zero external runtime (`coboller`)**: pure-Python COBOL copybook parser and binary decoder — no JVM, no mainframe compiler, no manual byte-slicing scripts.
-- **Convert COBOL mainframe extracts to modern formats**: stream multi-gigabyte fixed-width or binary EBCDIC extracts (`cp500`, `cp037`, ASCII, UTF-8) directly into **CSV, TSV, JSONL, JSON, Excel, Parquet, or `pandas.DataFrame`** via a single CLI command (`coboller convert`) or Python call (`Copybook.convert()`).
-- **Handles strange real-world mainframe & COBOL data types**: `COMP-3` / `PACKED-DECIMAL`, `COMP-6`, `COMP`/`COMP-4`/`COMP-5`/`COMP-X`, `BINARY-CHAR/SHORT/LONG/DOUBLE`, `COMP-1`/`COMP-2` (IEEE 754 & IBM z/Architecture HFP), `FLOAT-SHORT`/`FLOAT-LONG`, signed zoned decimals (EBCDIC/ASCII/Micro Focus overpunch & separate signs), numeric-edited (`DECIMAL-POINT IS COMMA`), external floats, `PIC N` UTF-16, `PIC U` UTF-8 + `BYTE-LENGTH`, `PIC G` DBCS, `PIC 1` `USAGE BIT`, `POINTER`/`INDEX`, nested `OCCURS`, `REDEFINES` overlays, and level-88 condition names.
-- **Format-agnostic `GenericData` & Pandera validation**: query metadata, stream chunks uniformly across formats, validate any dataset with `pandera.DataFrameSchema` (`record_validate_schema`), or auto-generate a Pandera schema straight from a COBOL copybook via `Copybook.to_pandera_schema()`.
-- **Excel driver & reporting**: configure batch integrity checks in an Excel workbook, execute sequentially or in parallel, and export color-coded Excel reports.
+DataSpector combines **two complementary pillars** in a single, zero-infrastructure Python package:
 
-## Background & How DataSpector Compares
+1. **Automated Data-Quality, Integrity & Drift Auditing (`dataspector`)**:
+   - **Source-level, record-level & cross-source controls**: verify file/table existence, modification recency, storage size tolerances, column counts, nullness, uniqueness, numeric/date ranges, conditional field rules, and cross-source schema/row-count consistency across **CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, SQLite, MS Access, SQL Server (ODBC), and COBOL datasets**.
+   - **Business-friendly Excel driver & executive reporting**: define hundreds of checks across dozens of data sources in an Excel workbook ([`test_driver.xlsx`](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)), execute sequentially or in parallel (`--use_multiprocess true`), and generate color-coded, timestamped Excel audit reports with pass/fail summaries, diagnostic notes, and severity levels (`Error` / `Warning`).
+   - **Declarative Pandera schema validation**: enforce `pandera.DataFrameSchema` rules (`record_validate_schema`) across streamed chunks — or auto-generate a Pandera schema directly from a COBOL copybook via `Copybook.to_pandera_schema()`.
+2. **Pure-Python COBOL & Mainframe Extract Conversion (`coboller`)**:
+   - **Read COBOL & mainframe extracts with zero external runtime**: pure-Python COBOL copybook parser and binary decoder — no JVM, no Spark cluster, no mainframe compiler, no manual byte-slicing scripts.
+   - **Convert legacy mainframe files to modern formats**: stream multi-gigabyte fixed-width or binary EBCDIC extracts (`cp500`, `cp037`, ASCII, UTF-8) directly into **CSV, TSV, JSONL, JSON, Excel, Parquet, or `pandas.DataFrame`** via a single CLI command (`coboller convert`) or Python call (`Copybook.convert()`).
+   - **Handles real-world mainframe & COBOL data types**: `COMP-3` / `PACKED-DECIMAL`, `COMP-6`, `COMP`/`COMP-4`/`COMP-5`/`COMP-X`, `BINARY-CHAR/SHORT/LONG/DOUBLE`, `COMP-1`/`COMP-2` (IEEE 754 & IBM z/Architecture HFP), `FLOAT-SHORT`/`FLOAT-LONG`, signed zoned decimals (EBCDIC/ASCII/Micro Focus overpunch & separate signs), numeric-edited (`DECIMAL-POINT IS COMMA`), external floats, `PIC N` UTF-16, `PIC U` UTF-8 + `BYTE-LENGTH`, `PIC G` DBCS, `PIC 1` `USAGE BIT`, `POINTER`/`INDEX`, nested `OCCURS`, `REDEFINES` overlays, and level-88 condition names.
 
-DataSpector was born out of a recurring real-world pain point in financial, insurance, and enterprise data engineering: **you receive a raw mainframe data extract (`.dat` / `.bin` / z/OS `.PS` Physical Sequential file) and a COBOL copybook (`.cbl` / `.cpy`), and you need to inspect, convert, and validate the data immediately in Python.**
+## Background & What DataSpector Replaces
 
-Most tools in the COBOL ecosystem solve a *different* problem (or require a full Java/Spark stack):
-- **Code-inventory & translation tools** (such as `cobol-migration-toolkit` or `cobol-safe-translator`) analyze or transpile COBOL *program source code* (`PROCEDURE DIVISION` logic, call graphs, Python code skeletons) — they do **not** unpack binary mainframe data files into DataFrames or Parquet/CSV.
-- **JVM / Spark frameworks** (such as `AbsaOSS/cobrix` or `JRecord`) decode binary mainframe extracts, but require provisioning a Java runtime or Apache Spark cluster.
-- **Basic Python copybook parsers** typically handle ASCII fixed-width text (`read_fwf`) and break as soon as a record mixes EBCDIC text with binary `COMP-3`, `COMP`, IBM HFP floats, `LOW-VALUES` initialization, or multi-record `REDEFINES` overlays.
+DataSpector was born from two recurring enterprise data problems:
 
-| Capability | **DataSpector (`coboller`)** | Basic Python Copybook Parsers | `cobol-migration-toolkit` / `cobol-safe-translator` | `Cobrix` / `JRecord` (Java / Spark) |
+1. **Replacing million-dollar enterprise data-governance & file-auditing suites**: DataSpector's data-quality engine was inspired by watching an IT organization spend millions on commercial data-auditing and governance platforms (such as Varonis) to monitor shared drives, databases, and scheduled data drops — when a fast, open-source Python tool driven by an Excel workbook could verify file arrivals, schema drift, record counts, value ranges, and cross-system consistency for free.
+2. **Unpacking raw mainframe data extracts without a heavy stack**: When a mainframe job drops a raw binary extract (`.dat` / `.bin` / z/OS `.PS` Physical Sequential file) and a COBOL copybook (`.cbl` / `.cpy`), most tools either focus on static COBOL *source-code* translation (ignoring binary data files), require a full JVM/Spark runtime, or only handle plain ASCII fixed-width text (`read_fwf`) and break as soon as a record mixes EBCDIC text with binary `COMP-3`, `COMP`, IBM HFP floats, `LOW-VALUES` initialization, or multi-record `REDEFINES` overlays.
+
+| Capability | **DataSpector (`dataspector` + `coboller`)** | Enterprise Data-Auditing Suites (e.g. Varonis) | JVM / Spark Mainframe Readers | Basic Fixed-Width / Copybook Scripts |
 | --- | --- | --- | --- | --- |
-| **Primary Focus** | **Read, convert & validate mainframe data extracts** | Parse simple text copybooks | Static COBOL code inventory / code translation | Spark / Java mainframe ingestion |
-| **100% Pure Python (No JVM / Spark)** | **Yes** | Yes | Yes | No (requires JVM / Spark) |
-| **Binary EBCDIC + `COMP-3`, `COMP`, `COMP-6`, `COMP-X`** | **Yes** | Partial / No | No | Yes |
-| **IBM HFP & IEEE Floats (`COMP-1`/`COMP-2`), `USAGE BIT`, DBCS, UTF-8** | **Yes** | No | No | Partial |
-| **Multi-Record `REDEFINES` Overlays & Nested `OCCURS`** | **Yes** | Partial | Code AST only | Yes |
-| **One-Command Export to CSV, TSV, JSONL, Excel, Parquet & `pandas`** | **Yes** | No | No | Spark DataFrame |
-| **Auto-Generated Pandera Schemas & Cross-Source Integrity Checks** | **Yes** | No | No | No |
+| **Cost & Footprint** | **Free, open-source (MIT), 100% pure Python** | Million-dollar enterprise licensing & agents | Requires JVM / Apache Spark cluster | Custom per-file scripts |
+| **Multi-Source Data-Integrity & Drift Auditing** | **Yes (22+ source, record & cross-source checks)** | File/permission governance (limited record logic) | No | No |
+| **Excel Driver Workbook & Color-Coded Audit Reports** | **Yes (`dataspector --driver ... --output ...`)** | Proprietary web console | No | No |
+| **Declarative Pandera Schema Validation** | **Yes (YAML/JSON/Python or auto-generated from COBOL)** | No | No | No |
+| **Binary EBCDIC + `COMP-3`, `COMP`, `COMP-6`, `COMP-X`** | **Yes** | No | Yes | Partial / No |
+| **IBM HFP & IEEE Floats (`COMP-1`/`COMP-2`), `USAGE BIT`, DBCS, UTF-8** | **Yes** | No | Partial | No |
+| **Multi-Record `REDEFINES` Overlays & Nested `OCCURS`** | **Yes** | No | Yes | Partial |
+| **One-Command Export to CSV, TSV, JSONL, Excel, Parquet & `pandas`** | **Yes (`coboller convert` / `GenericData.convert`)** | No | Spark DataFrame | No |
 
 ### Real-World Mainframe Extract Benchmark ([`notebooks/validate_mainframe_extracts.ipynb`](https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb))
 
-To prove `dataspector.coboller` against production-grade mainframe layouts and strange binary edge cases, the repository includes an executable validation notebook — **[`notebooks/validate_mainframe_extracts.ipynb`](https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb)** — that automatically downloads and validates **69 COBOL copybooks** and **37 mainframe data extracts (5,863 records)** from public enterprise benchmarks:
+To prove `dataspector.coboller` against production-grade mainframe layouts and binary edge cases, the repository includes an executable validation notebook — **[`notebooks/validate_mainframe_extracts.ipynb`](https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb)** — that automatically validates **69 COBOL copybooks** and **37 mainframe data extracts (5,863 records)** across public enterprise mainframe benchmarks:
 
 | Benchmark Suite | Copybooks Parsed | Data Extracts Decoded | Records Decoded | Highlights Tested |
 | --- | --- | --- | --- | --- |
-| **[AWS Mainframe Modernization CardDemo](https://github.com/aws-samples/aws-mainframe-modernization-carddemo)** (`app/cpy` & `app/data`) | 30 / 30 (100%) | 16 / 16 (100%) | 1,343 | z/OS EBCDIC `.PS` & ASCII batch extracts, 500-row 5-layout `REDEFINES` export (`CVEXPORT.cpy`), `COMP`, `COMP-3`, `OCCURS`, `LOW-VALUES` |
-| **[ABSA Bank Cobrix Test Suite](https://github.com/AbsaOSS/cobrix)** (`data/` & `examples/`) | 36 / 36 (100%) | 18 / 18 (100%) | 4,480 | 195-field type matrix (`INTEGR.TYPES`), 37-digit `BINARY` & `COMP-3`, 2,202-byte 247-column financial records (`OCCURS 80`), wider `REDEFINES`, `P` scaling, explicit-decimal overpunch |
+| **Enterprise Mainframe Modernization Suite (AWS CardDemo)** | 30 / 30 (100%) | 16 / 16 (100%) | 1,343 | z/OS EBCDIC `.PS` & ASCII batch extracts, 500-row 5-layout `REDEFINES` export (`CVEXPORT.cpy`), `COMP`, `COMP-3`, `OCCURS`, `LOW-VALUES` |
+| **Enterprise Financial & Banking Torture Suite** | 36 / 36 (100%) | 18 / 18 (100%) | 4,480 | 195-field type matrix (`INTEGR.TYPES`), 37-digit `BINARY` & `COMP-3`, 2,202-byte 247-column financial records (`OCCURS 80`), wider `REDEFINES`, `P` scaling, explicit-decimal overpunch |
 | **DataSpector Built-in Benchmark Suite** (`tests/data/`) | 3 / 3 (100%) | 3 / 3 (100%) | 40 | `cp500` EBCDIC, `COMP-6`, `COMP-X`, `BINARY-*`, `FLOAT-*`, `PIC U` UTF-8, `PIC G` DBCS, `PIC 1` `USAGE BIT`, `DECIMAL-POINT IS COMMA` |
 | **Total** | **69 / 69 (100%)** | **37 / 37 (100%)** | **5,863** | **Zero decoding failures across all 37 extracts** |
 
@@ -140,9 +144,18 @@ PosixPath('accounts.jsonl')
 >>> _ = schema.validate(df)
 ```
 
-## Format-Agnostic Data-Integrity Checks
+## Format-Agnostic Data-Integrity Checks & Automated Reporting (`dataspector`)
 
-### Python API
+DataSpector provides **22+ built-in data-quality checks** across three layers — plus full **Pandera** schema validation — over any format supported by `GenericData` (`CSV`, `TSV`, `Excel`, `Fixed-Width`, `Parquet`, `JSON/JSONL`, `HDF5`, `SQLite`, `MS Access`, `SQL Server via ODBC`, and `COBOL Copybook + Data Extract`):
+
+| Check Category | Built-in Controls | What They Audit |
+| --- | --- | --- |
+| **Source & Metadata Checks** (`source_*`) | `source_exists`, `source_fuzzy_find`, `source_has_N_fields`, `source_modified_recently`, `source_modified_on_date`, `source_storage_size_roughly` | File/table arrival, wildcard discovery, schema column count, freshness SLAs, and file-size anomalies |
+| **Cross-Source Reconciliation** (`source_source_*`) | `source_source_same_fields`, `source_source_identical`, `source_source_size_roughly_same`, `source_source_roughly_same_number_of_records` | Schema drift, byte-for-byte identity, storage volume stability, and row-count reconciliation between staging/production or legacy/modern targets |
+| **Record & Field Quality** (`record_*`) | `record_count`, `record_count_greater_than`, `record_contains`, `record_contains_at_least`, `record_field_not_null`, `record_all_data_not_null`, `record_field_is_unique`, `record_field_is_numeric`, `record_field_contains`, `record_field_contains_at_least`, `record_field_contains_only`, `record_field_numeric_value_between`, `record_field_date_between`, `record_if_field1_startswith_field2_contains_only` | Completeness, primary-key uniqueness, numeric/date bounds, allowed domain values, and cross-column business rules (streamed chunk-by-chunk for constant memory) |
+| **Declarative Schema Validation** | `record_validate_schema` (powered by **Pandera**) | Column dtypes, regex patterns, range constraints, YAML/JSON schema files, or auto-generated COBOL copybook schemas (`Copybook.to_pandera_schema()`) |
+
+### Python API & Terminal Reporting
 
 ```python
 from pathlib import Path
@@ -154,22 +167,39 @@ results = dataspector.run_checks_on_location(
         ("source_exists", {}),
         ("source_has_N_fields", {"n_fields": 5}),
         ("record_count", {"nrows": 31}),
+        ("record_field_not_null", {"field": "Cost Center"}),
         ("record_field_numeric_value_between", {"field": "Cost [CAD]", "constraint": (0, 200000)}),
     ],
 )
 assert results.all_passed
+
+# Print a colorized summary table to the terminal or export an Excel audit report
+dataspector.pretty_print_results(results)
+dataspector.write_excel_report({"Sample CSV": results}, "audit_report.xlsx")
 ```
 
-### Batch Checks via Excel Driver CLI
+### Batch Auditing & Color-Coded Excel Reports via CLI
 
-Define multiple data sources and checks in an Excel workbook (see the sample [test_driver.xlsx](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
+Non-technical analysts and data engineers alike can manage enterprise check suites in an Excel driver workbook (see the sample [`test_driver.xlsx`](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
+- **`Location Details` sheet**: maps friendly source names (`Source Name`) to file paths, database tables (`[server][db][table]`), Excel sheets (`[workbook.xlsx][Sheet1]`), or COBOL pairs (`[layout.cbl][extract.dat]`), along with optional `Reader Arguments` (e.g., `encoding="cp500"` or fixed-width `widths`).
+- **`Checks to Run` sheet**: lists each check, its `Keyword Arguments`, an active `Process` toggle (`Y`/`N`), and a `Severity` level (`Error` or `Warning`).
+
+Run the entire audit suite from the command line or Python:
 
 ```bash
+# Execute all enabled checks in test_driver.xlsx and generate a formatted Excel report
 dataspector --driver test_driver.xlsx --output report.xlsx
+
+# Execute across sources in parallel worker processes
+dataspector --driver test_driver.xlsx --output report.xlsx --use_multiprocess true --overwrite true
+
+# Or drive via a YAML/JSON configuration file
 dataspector --config run.yaml
 ```
 
-Key options (from `DataSpectorSettings`):
+The generated Excel report (`write_excel_report`) replicates the driver layout and appends color-coded **Passed** (green `TRUE` / red `FALSE`), **Notes** (diagnostic failure details, such as offending row values or mismatched columns), and **Exceptions** columns for immediate audit sign-off.
+
+Key CLI options (from `DataSpectorSettings`):
 - `--driver`: path to the Excel driver workbook (`Location Details` and `Checks to Run` sheets).
 - `--output`: path to write the formatted Excel report (auto-versioned unless `--overwrite true`).
 - `--use_multiprocess true`: run location checks in parallel worker processes.

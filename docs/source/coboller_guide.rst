@@ -19,8 +19,8 @@ Excel, or Parquet** files with zero JVM or external compiler dependencies.
    See the pre-executed Jupyter benchmark notebook
    `notebooks/validate_mainframe_extracts.ipynb <https://github.com/aberndsen/dataspector/blob/main/notebooks/validate_mainframe_extracts.ipynb>`_
    for an end-to-end validation of **69 COBOL copybooks** and **37 real-world
-   mainframe data extracts (5,863 records)** from **AWS Mainframe Modernization
-   CardDemo** and **ABSA Bank's Cobrix Test Suite** (100% pass rate).
+   mainframe data extracts (5,863 records)** across public enterprise mainframe
+   benchmark suites (100% pass rate).
 
 Interactive Exploration & Conversion Walkthrough
 ------------------------------------------------
@@ -326,12 +326,12 @@ with a **100% pass rate**:
      - Extracts
      - Records
      - Key Features Validated
-   * - `AWS Mainframe Modernization CardDemo <https://github.com/aws-samples/aws-mainframe-modernization-carddemo>`_
+   * - Enterprise Mainframe Modernization Suite (AWS CardDemo)
      - 30 / 30 (100%)
      - 16 / 16 (100%)
      - 1,343
      - z/OS EBCDIC ``.PS`` (up to 250 KB) & ASCII batch extracts, 5-layout ``REDEFINES`` export (``CVEXPORT.cpy``), ``COMP``, ``COMP-3``, ``OCCURS``, ``LOW-VALUES``
-   * - `ABSA Bank Cobrix Test Suite <https://github.com/AbsaOSS/cobrix>`_
+   * - Enterprise Financial & Banking Torture Suite
      - 36 / 36 (100%)
      - 18 / 18 (100%)
      - 4,480
