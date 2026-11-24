@@ -25,6 +25,11 @@ mainframe data extract conversion** (``coboller``):
    into clean, human-readable **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas
    DataFrames** via :mod:`dataspector.coboller` and the ``coboller`` CLI.
 
+.. image:: _static/dataspector-architecture.jpg
+   :alt: Mainframe/COBOL, SQL databases, spreadsheets, and flat files flow through DataSpector into data-quality reports and modern data formats
+   :align: center
+   :width: 100%
+
 Run Data-Integrity Checks & Generate Excel Audit Reports
 --------------------------------------------------------
 

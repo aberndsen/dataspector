@@ -59,6 +59,8 @@ html_title = (
     f"DataSpector {release} — Enterprise Data-Quality Auditing & Pure-Python COBOL Converter"
 )
 html_static_path: list[str] = ["_static"]
+html_logo = "_static/dataspector-logo.png"
+html_favicon = "_static/favicon.png"
 html_extra_path: list[str] = [
     "_static/robots.txt",
     "_static/llms.txt",
@@ -178,6 +180,8 @@ def _inject_seo_and_jsonld(
         f'\n<meta property="og:url" content="{page_url}" />'
         f'\n<meta property="og:title" content="{escape(page_title)}" />'
         f'\n<meta property="og:description" content="{escape(_SEO_DESCRIPTION)}" />'
+        f'\n<meta property="og:image" content="{html_baseurl}_static/dataspector-architecture.jpg" />'
+        f'\n<meta name="twitter:image" content="{html_baseurl}_static/dataspector-architecture.jpg" />'
         f'\n<meta name="twitter:card" content="summary_large_image" />'
         f'\n<meta name="twitter:title" content="{escape(page_title)}" />'
         f'\n<meta name="twitter:description" content="{escape(_SEO_DESCRIPTION)}" />'

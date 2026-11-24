@@ -1,5 +1,9 @@
 # DataSpector
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/aberndsen/dataspector/main/docs/source/_static/dataspector-logo.png" alt="DataSpector logo" width="140">
+</p>
+
 [![PyPI version](https://img.shields.io/pypi/v/dataspector.svg)](https://pypi.org/project/dataspector/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dataspector.svg)](https://pypi.org/project/dataspector/)
 [![CI](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml/badge.svg)](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml)
@@ -8,6 +12,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aberndsen/dataspector/blob/main/LICENSE)
 
 **Enterprise data-quality & integrity checks (`dataspector`) and pure-Python COBOL copybook & mainframe extract conversion (`coboller`)** — audit files, spreadsheets, databases, and legacy extracts with automated Excel reporting, and decode binary EBCDIC, `COMP-3` packed decimals, binary integers, IBM HFP floats, and fixed-width files directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames**.
+
+![DataSpector architecture: mainframe/COBOL, SQL databases, spreadsheets, and flat files flow through DataSpector into data-quality reports and modern data formats](https://raw.githubusercontent.com/aberndsen/dataspector/main/docs/source/_static/dataspector-architecture.jpg)
 
 ## Why DataSpector?
 
