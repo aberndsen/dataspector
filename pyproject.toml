@@ -44,6 +44,7 @@ keywords = [
     "postgresql",
     "mysql",
     "duckdb",
+    "snowflake",
     "pandas",
     "pandera",
 ]
@@ -95,6 +96,9 @@ oracle = [
 ]
 duckdb = [
     "duckdb-engine>=0.13.0",
+]
+snowflake = [
+    "snowflake-sqlalchemy>=1.6.0",
 ]
 odbc = [
     "pyodbc>=5.5.0",

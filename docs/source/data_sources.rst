@@ -55,6 +55,7 @@ Unified URI / Scheme Reference
        * ``"mariadb+pymysql://user:${DB_PASS}@host:3306/app#audit_log"``
        * ``"mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts"``
        * ``"oracle+oracledb://user:${ORA_PASS}@host:1521/service#transactions"``
+       * ``"snowflake://user:${SF_PASS}@account_id/database/schema?warehouse=COMPUTE_WH&role=ANALYST#fact_sales"``
 
 .. tip::
 
@@ -104,6 +105,9 @@ matching your database:
    * - **DuckDB**
      - ``pip install "dataspector[duckdb]"``
      - ``duckdb:///warehouse.duckdb#events``
+   * - **Snowflake**
+     - ``pip install "dataspector[snowflake]"``
+     - ``snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=WH#table``
    * - **All pure-wheel SQL drivers**
      - ``pip install "dataspector[db]"``
      - Installs ``postgres``, ``mysql``, ``oracle``, and ``duckdb`` extras together

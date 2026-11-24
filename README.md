@@ -78,7 +78,8 @@ pip install "dataspector[postgres]"  # PostgreSQL (psycopg[binary])
 pip install "dataspector[mysql]"     # MySQL / MariaDB (pymysql)
 pip install "dataspector[oracle]"    # Oracle thin mode (oracledb)
 pip install "dataspector[duckdb]"    # DuckDB (duckdb-engine)
-pip install "dataspector[db]"        # All pure-wheel SQL drivers above
+pip install "dataspector[snowflake]" # Snowflake (snowflake-sqlalchemy)
+pip install "dataspector[db]"        # All pure-wheel SQL drivers above (postgres, mysql, oracle, duckdb)
 pip install "dataspector[odbc]"      # SQL Server / MS Access (pyodbc)
 pip install "dataspector[parquet]"   # Apache Parquet (pyarrow)
 pip install "dataspector[docs]"      # Sphinx + PyData theme documentation dependencies
@@ -93,7 +94,7 @@ Address any file, Excel sheet, COBOL copybook + extract pair, or SQL database ta
 | **Single Files** | `data/accounts.csv` *(auto)*, `csv://drops/daily.dat`, `tsv://exports/tab.txt`, `fwf://fixed.bin?widths=[10,20,15]`, `parquet://lake/events.parquet`, `jsonl://logs/stream.log` |
 | **Excel Sheets & HDF5** | `excel://reports/q1.xlsx#Sheet1` *(or `reports/q1.xlsx#Sheet1`)*, `hdf5://store/data.h5#measurements` |
 | **COBOL Copybook + Data** | `cobol://layouts/acct.cbl::data/acct.dat?encoding=cp500&include_filler=false` |
-| **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://user:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
+| **SQL Databases (SQLAlchemy)** | `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`, `snowflake://user:${SF_PASS}@acct/db/schema?warehouse=WH#fact_sales`, `duckdb:///warehouse.duckdb#events`, `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts`, `oracle+oracledb://user:${ORA_PASS}@host:1521/svc#ledger`, `access://legacy.accdb#Orders` |
 
 *(All legacy bracketed locators such as `[workbook.xlsx][Sheet1]`, `[layout.cbl][extract.dat]`, and `[server][db][table]` remain 100% supported. See the [Supported Data Sources Guide](https://aberndsen.github.io/dataspector/data_sources.html) for full details.)*
 

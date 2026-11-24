@@ -19,6 +19,7 @@ of the box):
 * ``pip install "dataspector[mysql]"`` — MySQL / MariaDB (``pymysql``).
 * ``pip install "dataspector[oracle]"`` — Oracle thin mode (``oracledb``).
 * ``pip install "dataspector[duckdb]"`` — DuckDB (``duckdb-engine``).
+* ``pip install "dataspector[snowflake]"`` — Snowflake (``snowflake-sqlalchemy``).
 * ``pip install "dataspector[db]"`` — all pure-wheel SQLAlchemy DB drivers above.
 * ``pip install "dataspector[odbc]"`` — SQL Server and MS Access (``pyodbc``).
 * ``pip install "dataspector[parquet]"`` — Apache Parquet via ``pyarrow``.

@@ -28,7 +28,8 @@ pip install "dataspector[postgres]"  # PostgreSQL (psycopg[binary])
 pip install "dataspector[mysql]"     # MySQL / MariaDB (pymysql)
 pip install "dataspector[oracle]"    # Oracle thin mode (oracledb)
 pip install "dataspector[duckdb]"    # DuckDB (duckdb-engine)
-pip install "dataspector[db]"        # All pure-wheel SQL drivers above
+pip install "dataspector[snowflake]" # Snowflake (snowflake-sqlalchemy)
+pip install "dataspector[db]"        # All pure-wheel SQL drivers above (postgres, mysql, oracle, duckdb)
 pip install "dataspector[odbc]"      # SQL Server / MS Access (pyodbc)
 pip install "dataspector[parquet]"   # Apache Parquet (pyarrow)
 ```
@@ -89,6 +90,7 @@ coboller convert layout.cbl extract.dat --encoding cp500 --output output.parquet
   - `"postgresql+psycopg://readonly:${PG_PASS}@db.internal:5432/warehouse#public.accounts"`
   - `"mysql+pymysql://readonly:${MYSQL_PASS}@host:3306/shop#orders"`
   - `"duckdb:///analytics.duckdb#events"`
+  - `"snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"`
   - `"mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger"`
   - `"oracle+oracledb://user:${ORA_PASS}@host:1521/service#transactions"`
   - `"access://legacy.accdb#Orders"`
