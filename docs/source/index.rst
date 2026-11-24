@@ -95,7 +95,6 @@ Or directly from the command line:
    :hidden:
 
    usage
-   data_sources
    api/index
    consulting
 

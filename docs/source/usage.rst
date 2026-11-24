@@ -181,5 +181,6 @@ handle your format.
    :maxdepth: 2
    :caption: Guides & Benchmarks
 
+   data_sources
    coboller_guide
    checks_guide
