@@ -69,8 +69,11 @@ jobs:
           echo "Commits since ${LAST_TAG}:"
           git log "${LAST_TAG}..HEAD" --oneline
 
-          if echo "$COMMITS" | grep -qiE '\[skip release\]|\[no release\]'; then
-            echo "Commit message requested [skip release]; skipping release."
+          # Only the pushed (HEAD) commit may opt out of a release. Older skipped
+          # commits still count toward the next bump once a releasable commit lands.
+          HEAD_MSG=$(git log -1 --pretty=format:"%s%n%b")
+          if echo "$HEAD_MSG" | grep -qiE '\[skip release\]|\[no release\]'; then
+            echo "HEAD commit requested [skip release]; skipping release."
             echo "released=false" >> "$GITHUB_OUTPUT"
             echo "tag=" >> "$GITHUB_OUTPUT"
             exit 0
@@ -78,9 +81,9 @@ jobs:
 
           if [ "$BUMP_OVERRIDE" != "auto" ]; then
             BUMP="$BUMP_OVERRIDE"
-          elif echo "$COMMITS" | grep -qE '^[a-zA-Z]+(\([^)]+\))?!:|BREAKING CHANGE:'; then
+          elif echo "$COMMITS" | grep -qE '^(\* )?[a-zA-Z]+(\([^)]+\))?!:|BREAKING CHANGE:'; then
             BUMP="major"
-          elif echo "$COMMITS" | grep -qE '^feat(\([^)]+\))?:'; then
+          elif echo "$COMMITS" | grep -qE '^(\* )?feat(\([^)]+\))?:'; then
             BUMP="minor"
           else
             BUMP="patch"
