@@ -65,12 +65,12 @@ MS Access):
        * ``"duckdb:///analytics.duckdb#events"``
        * ``"access://legacy.accdb#Orders"``
    * - **SQL Databases (Postgres, MySQL, MariaDB, Snowflake, MSSQL, Oracle)**
-     - * ``"postgresql+psycopg://user:${DB_PASS}@db.internal:5432/warehouse#public.users"``
-       * ``"mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders"``
-       * ``"mariadb+pymysql://user:${DB_PASS}@host:3306/app#audit_log"``
-       * ``"snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"``
+     - * ``"postgresql+psycopg://${PG_USER}:${PG_PASS}@db.internal:5432/warehouse#public.users"``
+       * ``"mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders"``
+       * ``"mariadb+pymysql://${DB_USER}:${DB_PASS}@host:3306/app#audit_log"``
+       * ``"snowflake://${SF_USER}:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"``
        * ``"mssql+pyodbc://server/database?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts"``
-       * ``"oracle+oracledb://user:${DB_PASS}@host:1521/service#ledger"``
+       * ``"oracle+oracledb://${ORA_USER}:${ORA_PASS}@host:1521/service#ledger"``
    * - **Structured Python / YAML Spec**
      - ``DataSourceSpec(uri="postgresql+psycopg://...", format="postgres", table="public.users", options={...})``
 
@@ -78,7 +78,7 @@ MS Access):
 
    **Environment Variable Interpolation**: Any locator string can reference
    environment variables using ``${VAR_NAME}`` (for example,
-   ``postgresql://readonly:${PG_PASSWORD}@db.internal:5432/prod#fact_sales`` or
+   ``postgresql+psycopg://${PG_USER}:${PG_PASSWORD}@db.internal:5432/prod#fact_sales`` or
    ``${DATABASE_URL}#fact_sales``) so credentials never need to be stored in
    Excel driver workbooks. See :doc:`data_sources` for the complete reference on
    SQLAlchemy database backends, optional extras, and :class:`~dataspector.core.DataSourceSpec`.

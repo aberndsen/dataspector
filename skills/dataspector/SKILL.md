@@ -13,7 +13,7 @@ description: Pure-Python enterprise data-quality & integrity auditing engine wit
    - Streams directly into **CSV, TSV, JSONL, JSON, Excel (`.xlsx`), Parquet, or `pandas.DataFrame`**.
 2. **Format-Agnostic Data-Quality, Integrity & Drift Auditing (`dataspector` / `dataspector.checkers`)**:
    - Runs **22+ built-in source, record, cross-source reconciliation, and declarative Pandera schema checks** across CSV, TSV, Excel, fixed-width text, Parquet, JSON/JSONL, HDF5, COBOL datasets, and SQL databases via SQLAlchemy (**SQLite, PostgreSQL, MySQL, MariaDB, SQL Server, Oracle, DuckDB, and MS Access**).
-   - Uses a **unified URI/scheme locator syntax** (`csv://`, `fwf://`, `excel://...#Sheet1`, `cobol://layout.cbl::extract.dat?encoding=cp500`, `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://user:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://...#orders`, `snowflake://...#table`, `duckdb:///...#events`) and structured `DataSourceSpec` objects, with `${ENV_VAR}` interpolation.
+   - Uses a **unified URI/scheme locator syntax** (`csv://`, `fwf://`, `excel://...#Sheet1`, `cobol://layout.cbl::extract.dat?encoding=cp500`, `sqlite:///db.sqlite#Table1`, `postgresql+psycopg://${PG_USER}:${PG_PASS}@host:5432/db#public.users`, `mysql+pymysql://...#orders`, `snowflake://...#table`, `duckdb:///...#events`) and structured `DataSourceSpec` objects, with `${ENV_VAR}` interpolation.
    - Supports business-friendly Excel driver workbooks (`Location Details` and `Checks to Run` sheets) and outputs color-coded Excel audit reports (`write_excel_report`) or terminal summaries (`pretty_print_results`).
 
 ## Installation
@@ -87,12 +87,12 @@ coboller convert layout.cbl extract.dat --encoding cp500 --output output.parquet
 - **COBOL copybook + data extract**: `"cobol://layout.cbl::extract.dat?encoding=cp500&include_filler=false"`
 - **SQL databases (SQLAlchemy URLs + `#table` or `#schema.table`, with `${ENV_VAR}` secret expansion)**:
   - `"sqlite:///db.sqlite#users"`
-  - `"postgresql+psycopg://readonly:${PG_PASS}@db.internal:5432/warehouse#public.accounts"`
-  - `"mysql+pymysql://readonly:${MYSQL_PASS}@host:3306/shop#orders"`
+  - `"postgresql+psycopg://${PG_USER}:${PG_PASS}@db.internal:5432/warehouse#public.accounts"`
+  - `"mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders"`
   - `"duckdb:///analytics.duckdb#events"`
-  - `"snowflake://user:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"`
+  - `"snowflake://${SF_USER}:${SF_PASS}@account_id/db/schema?warehouse=COMPUTE_WH#fact_sales"`
   - `"mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger"`
-  - `"oracle+oracledb://user:${ORA_PASS}@host:1521/service#transactions"`
+  - `"oracle+oracledb://${ORA_USER}:${ORA_PASS}@host:1521/service#transactions"`
   - `"access://legacy.accdb#Orders"`
 - **Structured `DataSourceSpec`**: `dataspector.DataSourceSpec(uri="...", format="postgres", table="public.accounts", options={...})`
 
@@ -102,7 +102,7 @@ coboller convert layout.cbl extract.dat --encoding cp500 --output output.parquet
 import dataspector
 
 results = dataspector.run_checks_on_location(
-    "postgresql+psycopg://readonly:${PG_PASS}@db.internal:5432/prod#public.accounts",
+    "postgresql+psycopg://${PG_USER}:${PG_PASS}@db.internal:5432/prod#public.accounts",
     # Or "csv://drops/daily.dat", "excel://book.xlsx#Sheet1", "cobol://layout.cbl::extract.dat?encoding=cp500"
     [
         ("source_exists", {}),

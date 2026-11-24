@@ -69,8 +69,8 @@ optional SQLAlchemy DB extras):
    excel://reports/q1.xlsx#Sheet1
    cobol://layouts/acct.cbl::extracts/acct.dat?encoding=cp500
    sqlite:///data/warehouse.sqlite#accounts
-   postgresql+psycopg://user:${PG_PASS}@db.internal:5432/prod#public.users
-   mysql+pymysql://user:${MYSQL_PASS}@host:3306/shop#orders
+   postgresql+psycopg://${PG_USER}:${PG_PASS}@db.internal:5432/prod#public.users
+   mysql+pymysql://${MYSQL_USER}:${MYSQL_PASS}@host:3306/shop#orders
 
 Read & Convert a COBOL Mainframe Extract in 3 Lines
 ---------------------------------------------------
