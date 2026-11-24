@@ -4,6 +4,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/dataspector.svg)](https://pypi.org/project/dataspector/)
 [![CI](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml/badge.svg)](https://github.com/aberndsen/dataspector/actions/workflows/ci.yml)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://aberndsen.github.io/dataspector/)
+[![Consulting & Support](https://img.shields.io/badge/Enterprise-Consulting%20%26%20Support-0A66C2.svg)](https://aberndsen.github.io/dataspector/consulting.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aberndsen/dataspector/blob/main/LICENSE)
 
 **Enterprise data-quality & integrity checks (`dataspector`) and pure-Python COBOL copybook & mainframe extract conversion (`coboller`)** — audit files, spreadsheets, databases, and legacy extracts with automated Excel reporting, and decode binary EBCDIC, `COMP-3` packed decimals, binary integers, IBM HFP floats, and fixed-width files directly into **CSV, TSV, JSON/JSONL, Excel, Parquet, or pandas DataFrames**.
@@ -205,6 +206,27 @@ Key CLI options (from `DataSpectorSettings`):
 - `--use_multiprocess true`: run location checks in parallel worker processes.
 - `--log_level`: Loguru verbosity (`ERROR`, `WARNING`, `INFO`, `DEBUG`, `TRACE`).
 - `--config`: optional YAML/JSON configuration file.
+
+## Enterprise Support & Consulting Services
+
+Need to migrate hundreds of legacy COBOL copybooks and EBCDIC/VSAM mainframe data drops into Parquet/Snowflake/Databricks, or replace a seven-figure commercial data-auditing platform with an automated, air-gapped Python + Excel-driven data-integrity suite?
+
+**Aaron Berndsen** (creator of DataSpector) offers enterprise consulting, architecture design, and fixed-scope implementation sprints:
+- **Turnkey Mainframe & COBOL Data Modernization**: Custom streaming pipelines for complex multi-record `REDEFINES`, `OCCURS DEPENDING ON`, `COMP-3` / `COMP-6`, IBM HFP floats, and vendor-specific COBOL dialects into cloud data lakes and warehouses — with zero JVM/Spark overhead.
+- **Automated Enterprise Data-Quality & Governance Rollouts**: Custom data-integrity checks, self-service Excel driver templates for finance/actuarial/audit teams, Pandera schema enforcement, and compliance reporting (SOX, OSFI, SOC 2, HIPAA).
+- **Custom Connectors & Priority Support**: Bespoke storage connectors, dialect support, and hands-on team workshops.
+
+**Get in Touch:**
+- **Consulting & Services Overview**: [https://aberndsen.github.io/dataspector/consulting.html](https://aberndsen.github.io/dataspector/consulting.html)
+- **Email**: [aaron.berndsen@gmail.com](mailto:aaron.berndsen@gmail.com?subject=DataSpector%20Enterprise%20Consulting%20Inquiry)
+- **LinkedIn**: [https://www.linkedin.com/in/aberndsen/](https://www.linkedin.com/in/aberndsen/)
+- **GitHub Issues & Discussions**: [https://github.com/aberndsen/dataspector/issues](https://github.com/aberndsen/dataspector/issues)
+
+## AI Assistant & Agent Integration (`llms.txt` & Agent Skill)
+
+DataSpector publishes standardized context files for AI coding assistants (Claude Code, Cursor, Antigravity, Perplexity, ChatGPT):
+- **[`llms.txt`](https://aberndsen.github.io/dataspector/llms.txt)** & **[`llms-full.txt`](https://aberndsen.github.io/dataspector/llms-full.txt)**: Machine-readable technical index and complete copy-paste recipe guide hosted on GitHub Pages.
+- **[`skills/dataspector/SKILL.md`](https://github.com/aberndsen/dataspector/blob/main/skills/dataspector/SKILL.md)**: Drop-in agent skill definition for AI coding environments.
 
 ## Development
 
