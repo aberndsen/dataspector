@@ -26,29 +26,56 @@ For local development from a repository checkout using ``uv``:
 Locating Data Sources
 ---------------------
 
-:class:`~dataspector.core.GenericData` accepts several location formats:
+:class:`~dataspector.core.GenericData` (and the ``Location`` column in Excel
+driver workbooks) supports a **unified URI/scheme locator syntax**, a structured
+:class:`~dataspector.core.DataSourceSpec` dataclass/dict, and backward-compatible
+bracketed or tuple locators across single files, COBOL copybook + data pairs, and
+any SQLAlchemy-compatible database flavour (SQLite, PostgreSQL, MySQL, MariaDB,
+SQL Server, Oracle, DuckDB, Snowflake, MS Access):
 
-.. list-table:: Supported Location Syntax
+.. list-table:: Unified Locator Syntax
    :header-rows: 1
-   :widths: 35 65
+   :widths: 30 70
 
-   * - Format
-     - Example
-   * - Local file or directory
-     - ``"tests/data/sample_csv.csv"`` or ``Path("tests/data")``
-   * - Excel workbook + sheet
-     - ``"[tests/data/sample_excel.xlsx][Sheet1]"``
-   * - SQLite / MS Access + table
-     - ``"[tests/data/sample_sqlite.sqlite][Table1]"`` or ``(path, "Table1")``
-   * - COBOL copybook + data file
-     - ``"[layout.cbl][records.dat]"`` or ``(Path("layout.cbl"), Path("records.dat"))``
-   * - Remote SQL Server (ODBC)
-     - ``"[server][database][table]"`` or ``("server", "database", "table")``
+   * - Source Category
+     - Unified Locator Examples
+   * - **Single Files (Auto or Explicit Format)**
+     - * ``"tests/data/sample_csv.csv"`` *(auto-detected from extension)*
+       * ``"csv://data/daily_drop.dat"`` *(forces CSV reader regardless of extension)*
+       * ``"tsv://data/export.txt"``
+       * ``"fwf://data/fixed.bin?widths=[10,20,15]"`` *(fixed-width text)*
+       * ``"parquet://data/events.parquet"`` / ``"json://data/payload.json"`` / ``"jsonl://data/stream.log"``
+   * - **Excel Sheets & HDF5 Keys**
+     - * ``"excel://tests/data/sample_excel.xlsx#Sheet1"`` or ``"tests/data/sample_excel.xlsx#Sheet1"``
+       * ``"hdf5://store/data.h5#measurements"``
+       * *(Legacy bracket syntax ``"[tests/data/sample_excel.xlsx][Sheet1]"`` is also supported)*
+   * - **COBOL Copybook + Data Extract**
+     - * ``"cobol://layout.cbl::records.dat"``
+       * ``"cobol://layout.cbl::records.dat?encoding=cp500&include_filler=false"``
+       * ``"cobol://layout.cbl?data=records.dat&encoding=cp500"``
+       * *(Legacy ``"[layout.cbl][records.dat]"`` and ``(Path("layout.cbl"), Path("records.dat"))`` are also supported)*
+   * - **Embedded Databases (SQLite, DuckDB, MS Access)**
+     - * ``"sqlite:///tests/data/sample_sqlite.sqlite#Table1"`` *(or ``?table=Table1``)*
+       * ``"duckdb:///analytics.duckdb#events"``
+       * ``"access://legacy.accdb#Orders"``
+       * *(Legacy ``"[tests/data/sample_sqlite.sqlite][Table1]"`` is also supported)*
+   * - **SQL Databases (Postgres, MySQL, MariaDB, MSSQL, Oracle, etc.)**
+     - * ``"postgresql://user:${DB_PASS}@db.internal:5432/warehouse#public.users"``
+       * ``"mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders"``
+       * ``"mariadb+pymysql://user:${DB_PASS}@host:3306/app#audit_log"``
+       * ``"mssql+pyodbc://server/database?driver=ODBC+Driver+18+for+SQL+Server#dbo.accounts"``
+       * ``"oracle+oracledb://user:${DB_PASS}@host:1521/service#ledger"``
+       * *(Legacy SQL Server ``"[server][database][table]"`` is also supported)*
+   * - **Structured Python / YAML Spec**
+     - ``DataSourceSpec(uri="postgresql://...", format="postgres", table="public.users", options={...})``
 
-Supported file extensions include ``.csv``, ``.tsv``, ``.txt`` (delimited or
-fixed-width via ``reader_options={"widths": [...]}``), ``.xlsx``/``.xls``,
-``.parquet``, ``.json``/``.jsonl``, ``.hdf``/``.h5``, ``.sqlite``/``.db``,
-``.mdb``/``.accdb``, and ``.cbl``/``.cpy``/``.cob`` copybooks.
+.. tip::
+
+   **Environment Variable Interpolation**: Any locator string can reference
+   environment variables using ``${VAR_NAME}`` (for example,
+   ``postgresql://readonly:${PG_PASSWORD}@db.internal:5432/prod#fact_sales`` or
+   ``${DATABASE_URL}#fact_sales``) so credentials never need to be stored in
+   Excel driver workbooks.
 
 Running Checks from Python
 --------------------------

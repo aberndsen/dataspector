@@ -6,17 +6,22 @@ import datetime
 import pathlib
 
 import pandas as pd
+import pytest
 from assertpy import assert_that
 
 import dataspector
 from dataspector.core import (
     CheckeredHistory,
+    DataSourceSpec,
     GenericData,
     connect_to_location,
+    connect_to_sqlalchemy_url,
+    interpolate_env_vars,
     load_and_run_checks,
     load_driverfile,
     parse_cell_to_dict,
     pretty_print_results,
+    resolve_location_with_options,
     run_checks_on_location,
     version_adder,
     write_excel_report,
@@ -271,3 +276,107 @@ def test_generic_data_to_dataframe_and_convert(
     gd_sql = GenericData(f"[{sample_sqlite}][Table1]")
     csv_out = gd_sql.convert(tmp_path / "sql_export.csv")
     assert_that(pd.read_csv(csv_out)).is_length(2)
+
+
+def test_unified_locator_syntax_across_files_cobol_and_databases(
+    sample_csv: pathlib.Path,
+    sample_excel: pathlib.Path,
+    sample_sqlite: pathlib.Path,
+    data_dir: pathlib.Path,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unified URI schemes, #fragments, cobol://::, SQLAlchemy URLs, and DataSourceSpec work seamlessly."""
+    # 1. Explicit file format scheme on a non-standard extension (.dat containing CSV)
+    disguised_csv = tmp_path / "daily_drop.dat"
+    disguised_csv.write_text(sample_csv.read_text(encoding="utf-8"), encoding="utf-8")
+    gd_csv_uri = GenericData(f"csv://{disguised_csv}")
+    assert_that(gd_csv_uri.exists).is_true()
+    assert_that(gd_csv_uri.number_of_records).is_equal_to(31)
+    assert_that(gd_csv_uri.columns).is_length(5)
+
+    # 2. TSV and fixed-width (fwf://) schemes with inline query options
+    tsv_file = tmp_path / "export.out"
+    tsv_file.write_text("col_a\tcol_b\n10\t20\n30\t40\n", encoding="utf-8")
+    gd_tsv = GenericData(f"tsv://{tsv_file}")
+    assert_that(gd_tsv.number_of_records).is_equal_to(2)
+    assert_that(gd_tsv.columns).is_equal_to(["col_a", "col_b"])
+
+    fwf_file = tmp_path / "fixed.bin"
+    fwf_file.write_text("ID  NAME  \n0001ALICE \n0002BOB   \n", encoding="utf-8")
+    gd_fwf = GenericData(f"fwf://{fwf_file}?widths=[4,6]")
+    assert_that(gd_fwf.number_of_records).is_equal_to(2)
+    assert_that(gd_fwf.columns).is_equal_to(["ID", "NAME"])
+
+    # 3. Excel scheme + #Sheet fragment (and plain path#Sheet fragment)
+    gd_excel_uri = GenericData(f"excel://{sample_excel}#Sheet1")
+    assert_that(gd_excel_uri.exists).is_true()
+    assert_that(gd_excel_uri.number_of_records).is_equal_to(18)
+
+    gd_excel_frag = GenericData(f"{sample_excel}#Sheet1")
+    assert_that(gd_excel_frag.exists).is_true()
+    assert_that(gd_excel_frag.number_of_records).is_equal_to(18)
+
+    # 4. COBOL scheme: cobol://layout::data and cobol://layout?data=...&encoding=cp500
+    # Even when the copybook file has a non-standard .txt extension!
+    txt_copybook = tmp_path / "mainframe_layout.txt"
+    txt_copybook.write_text(
+        (data_dir / "sample_cobol_mainframe.cbl").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    mf_data = data_dir / "sample_cobol_mainframe.dat"
+
+    gd_cobol_double_colon = GenericData(
+        f"cobol://{txt_copybook}::{mf_data}?encoding=cp500&include_filler=false"
+    )
+    assert_that(gd_cobol_double_colon.exists).is_true()
+    assert_that(gd_cobol_double_colon.number_of_records).is_equal_to(4)
+
+    gd_cobol_query = GenericData(f"cobol://{txt_copybook}?data={mf_data}&encoding=cp500")
+    assert_that(gd_cobol_query.exists).is_true()
+    assert_that(gd_cobol_query.number_of_records).is_equal_to(4)
+
+    # 5. Unified Database URLs: sqlite:///path#Table1, sqlite://path?table=Table1, and env var interpolation
+    monkeypatch.setenv("TEST_SQLITE_PATH", str(sample_sqlite))
+    gd_sqlite_uri = GenericData("sqlite:///${TEST_SQLITE_PATH}#Table1")
+    assert_that(gd_sqlite_uri.exists).is_true()
+    assert_that(gd_sqlite_uri.number_of_records).is_equal_to(2)
+    sqlite_cols = gd_sqlite_uri.columns
+    assert sqlite_cols is not None
+    assert_that(sqlite_cols).is_not_empty()
+
+    gd_sqlite_q = GenericData(f"sqlite3://{sample_sqlite}?table=Table1")
+    assert_that(gd_sqlite_q.exists).is_true()
+    assert_that(gd_sqlite_q.number_of_records).is_equal_to(2)
+
+    # 6. Structured DataSourceSpec & dict locators (for files, COBOL, and databases)
+    spec_cobol = DataSourceSpec(
+        uri=txt_copybook,
+        format="cobol",
+        data=mf_data,
+        options={"encoding": "cp500"},
+    )
+    gd_spec_cobol = GenericData(spec_cobol)
+    assert_that(gd_spec_cobol.exists).is_true()
+    assert_that(gd_spec_cobol.number_of_records).is_equal_to(4)
+
+    gd_dict_db = GenericData(
+        {
+            "format": "sqlite",
+            "uri": f"sqlite:///{sample_sqlite}",
+            "table": "Table1",
+        }
+    )
+    assert_that(gd_dict_db.exists).is_true()
+    assert_that(gd_dict_db.number_of_records).is_equal_to(2)
+
+    gd_spec_csv = GenericData(DataSourceSpec(uri=disguised_csv, format="csv"))
+    assert_that(gd_spec_csv.number_of_records).is_equal_to(31)
+
+    # 7. Helper coverage for scheme normalization & edge cases
+    assert_that(interpolate_env_vars("plain_string")).is_equal_to("plain_string")
+    assert_that(connect_to_sqlalchemy_url("not_a_url")).is_none()
+    _, _pg_eng, pg_tbl, _ = resolve_location_with_options(
+        "postgres://user:pass@localhost:5432/mydb#public.users"
+    )
+    assert_that(pg_tbl).is_equal_to("public.users")

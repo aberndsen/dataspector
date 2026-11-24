@@ -182,7 +182,16 @@ dataspector.write_excel_report({"Sample CSV": results}, "audit_report.xlsx")
 ### Batch Auditing & Color-Coded Excel Reports via CLI
 
 Non-technical analysts and data engineers alike can manage enterprise check suites in an Excel driver workbook (see the sample [`test_driver.xlsx`](https://github.com/aberndsen/dataspector/blob/main/test_driver.xlsx)):
-- **`Location Details` sheet**: maps friendly source names (`Source Name`) to file paths, database tables (`[server][db][table]`), Excel sheets (`[workbook.xlsx][Sheet1]`), or COBOL pairs (`[layout.cbl][extract.dat]`), along with optional `Reader Arguments` (e.g., `encoding="cp500"` or fixed-width `widths`).
+- **`Location Details` sheet**: maps friendly source names (`Source Name`) to a **unified locator string** (or legacy bracketed syntax), along with optional `Reader Arguments`:
+  - **Single files (auto or explicit scheme)**: `tests/data/sample_csv.csv`, `csv://drops/daily.dat`, `tsv://exports/tab.txt`, `fwf://extracts/fixed.txt?widths=[10,20,15]`, `parquet://lake/part.parquet`, `jsonl://logs/events.log`
+  - **Excel sheets & HDF5 keys**: `excel://workbook.xlsx#Sheet1` (or `workbook.xlsx#Sheet1`, `[workbook.xlsx][Sheet1]`), `hdf5://store.h5#measurements`
+  - **COBOL copybook + data extract pairs**: `cobol://layout.cbl::extract.dat?encoding=cp500` (or `[layout.cbl][extract.dat]`)
+  - **Embedded & Server SQL Databases (SQLite, Postgres, MySQL, MariaDB, SQL Server, Oracle, DuckDB, MS Access)**:
+    - `sqlite:///path/to/db.sqlite#Table1`
+    - `postgresql://user:${DB_PASS}@host:5432/warehouse#public.accounts`
+    - `mysql+pymysql://user:${DB_PASS}@host:3306/shop#orders`
+    - `mssql+pyodbc://server/db?driver=ODBC+Driver+18+for+SQL+Server#dbo.ledger` (or `[server][db][table]`)
+    - `duckdb:///analytics.duckdb#events` / `access://legacy.accdb#Orders`
 - **`Checks to Run` sheet**: lists each check, its `Keyword Arguments`, an active `Process` toggle (`Y`/`N`), and a `Severity` level (`Error` or `Warning`).
 
 Run the entire audit suite from the command line or Python:
