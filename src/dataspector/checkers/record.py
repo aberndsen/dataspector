@@ -210,7 +210,7 @@ def record_field_contains_at_least(
     field: str,
     values: Sequence[Any],
     _last_chunk: bool = True,
-    _found: list[Any] | None = None,
+    _found: set[Any] | list[Any] | None = None,
 ) -> CheckOutcome:
     """Check that column *field* contains every value in *values* across the dataset.
 
@@ -232,7 +232,9 @@ def record_field_contains_at_least(
     CheckOutcome
         ``True`` once all values are observed; ``None`` while streaming; ``False`` at end.
     """
-    found_set = set(_found) if _found is not None else set()
+    found_set = (
+        _found if isinstance(_found, set) else (set(_found) if _found is not None else set())
+    )
     passed: bool | None = None
     notes: str | None = None
 
@@ -250,7 +252,7 @@ def record_field_contains_at_least(
     return CheckOutcome(
         passed=passed,
         notes=notes,
-        kwargs={"field": field, "values": list(values), "_found": list(found_set)},
+        kwargs={"field": field, "values": list(values), "_found": found_set},
     )
 
 
@@ -260,7 +262,7 @@ def record_field_contains_only(
     field: str,
     values: Sequence[Any],
     _last_chunk: bool = True,
-    _found: list[Any] | None = None,
+    _found: set[Any] | list[Any] | None = None,
 ) -> CheckOutcome:
     """Check that column *field* contains no values outside *values*.
 
@@ -282,7 +284,9 @@ def record_field_contains_only(
     CheckOutcome
         ``False`` immediately on unexpected values; ``None`` while streaming; ``True`` at end.
     """
-    found_set = set(_found) if _found is not None else set()
+    found_set = (
+        _found if isinstance(_found, set) else (set(_found) if _found is not None else set())
+    )
     allowed = set(values)
     passed: bool | None = None
     notes: str | None = None
@@ -306,7 +310,7 @@ def record_field_contains_only(
     return CheckOutcome(
         passed=passed,
         notes=notes,
-        kwargs={"field": field, "values": list(values), "_found": list(found_set)},
+        kwargs={"field": field, "values": list(values), "_found": found_set},
     )
 
 
@@ -412,7 +416,7 @@ def record_field_is_unique(
     data: pd.DataFrame,
     field: str,
     _last_chunk: bool = True,
-    _found: list[Any] | None = None,
+    _found: set[Any] | list[Any] | None = None,
 ) -> CheckOutcome:
     """Check that every value in *field* is unique across all chunks.
 
@@ -432,7 +436,7 @@ def record_field_is_unique(
     CheckOutcome
         ``False`` immediately on duplicate values; ``None`` while streaming; ``True`` at end.
     """
-    seen = set(_found) if _found is not None else set()
+    seen = _found if isinstance(_found, set) else (set(_found) if _found is not None else set())
     passed: bool | None = None
     notes: str | None = None
 
@@ -456,7 +460,7 @@ def record_field_is_unique(
         elif _last_chunk:
             passed = True
 
-    return CheckOutcome(passed=passed, notes=notes, kwargs={"field": field, "_found": list(seen)})
+    return CheckOutcome(passed=passed, notes=notes, kwargs={"field": field, "_found": seen})
 
 
 @requires_all_data

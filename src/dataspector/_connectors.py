@@ -15,7 +15,7 @@ from typing import Any
 from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy import inspect as sa_inspect
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, make_url
 
 from dataspector import coboller
 
@@ -32,6 +32,66 @@ _JET_CONNECTIONS: tuple[str, ...] = (
 )
 
 _ENV_VAR_PATTERN = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_URL_CREDS_RE = re.compile(r"([A-Za-z][A-Za-z0-9+._-]*://[^:@/\s]+:)([^@/\s]+)(@)")
+
+
+def redact_url(value: Any) -> str:
+    """Return a string representation of *value* with any embedded URL password masked.
+
+    Parameters
+    ----------
+    value
+        Locator string, :class:`DataSourceSpec`, SQLAlchemy :class:`Engine`, or path.
+
+    Returns
+    -------
+    str
+        Display-safe string with credentials redacted as ``***``.
+    """
+    if isinstance(value, Engine):
+        return value.url.render_as_string(hide_password=True)
+    text = str(value)
+    if "://" not in text or "@" not in text:
+        return text
+    try:
+        prefix, sep, frag = text.partition("#")
+        redacted = make_url(prefix).render_as_string(hide_password=True)
+        return f"{redacted}#{frag}" if sep else redacted
+    except Exception:
+        return _URL_CREDS_RE.sub(r"\1***\3", text)
+
+
+def quote_odbc_identifier(identifier: str) -> str:
+    """Safely bracket-quote a SQL identifier for ``pyodbc`` queries.
+
+    Parameters
+    ----------
+    identifier
+        Table or column name.
+
+    Returns
+    -------
+    str
+        Bracket-escaped SQL identifier (``]`` doubled to ``]]``).
+
+    Raises
+    ------
+    ValueError
+        If *identifier* is empty or contains NUL / control characters.
+    """
+    if not identifier or any(ord(ch) < 32 for ch in identifier):
+        raise ValueError(f"Invalid SQL identifier: {identifier!r}")
+    return f"[{identifier.replace(']', ']]')}]"
+
+
+def _escape_odbc_value(value: str) -> str:
+    """Escape a value for safe inclusion in an ODBC connection string."""
+    if any(ord(ch) < 32 for ch in value):
+        raise ValueError(f"Invalid control character in ODBC parameter: {value!r}")
+    if ";" in value or "{" in value or "}" in value:
+        return "{" + value.replace("}", "}}") + "}"
+    return value
+
 
 _FILE_SCHEMES: dict[str, str] = {
     "file": "",
@@ -235,8 +295,9 @@ def connect_to_embedded_db(database: str | pathlib.Path) -> Any:
             return None
 
     if pyodbc is not None and suffix in {".mdb", ".accdb"}:
+        safe_path = _escape_odbc_value(str(db_path))
         for base in _JET_CONNECTIONS:
-            connstr = base % str(db_path)
+            connstr = base % safe_path
             try:
                 return pyodbc.connect(connstr)
             except Exception as exc:
@@ -290,7 +351,7 @@ def connect_to_sqlalchemy_url(url: str) -> Engine | None:
     try:
         return create_engine(normalized)
     except Exception as exc:
-        logger.trace("Could not create SQLAlchemy engine for {}: {}", normalized, exc)
+        logger.trace("Could not create SQLAlchemy engine for {}: {}", redact_url(normalized), exc)
         return None
 
 
@@ -560,14 +621,18 @@ def connect_to_server(server: str, database: str) -> Engine | None:
         logger.trace("pyodbc is not installed; skipping remote SQL Server connection.")
         return None
 
+    safe_server = _escape_odbc_value(server)
+    safe_database = _escape_odbc_value(database)
     ad_odbc = urllib.parse.quote_plus(
-        f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};"
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={safe_server};DATABASE={safe_database};"
         "Authentication=ActiveDirectoryIntegrated;"
     )
+    quoted_server = urllib.parse.quote(server, safe=".:-")
+    quoted_db = urllib.parse.quote(database, safe="_-")
     templates = (
         f"mssql+pyodbc:///?odbc_connect={ad_odbc}",
-        f"mssql+pyodbc://{server}/{database}?driver=ODBC+Driver+17+for+SQL+Server",
-        f"mssql+pyodbc://{server}/{database}?driver=SQL+Server+Native+Client+11.0",
+        f"mssql+pyodbc://{quoted_server}/{quoted_db}?driver=ODBC+Driver+17+for+SQL+Server",
+        f"mssql+pyodbc://{quoted_server}/{quoted_db}?driver=SQL+Server+Native+Client+11.0",
     )
     for url in templates:
         try:
