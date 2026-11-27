@@ -15,6 +15,7 @@ import xlsxwriter
 from loguru import logger
 
 from dataspector import checkers
+from dataspector._connectors import redact_url
 
 if TYPE_CHECKING:
     from dataspector.core import CheckeredHistory
@@ -161,7 +162,22 @@ def load_driverfile(
 
     sources = file_info["Source Name"].astype(str).copy()
     locations = file_info["Location"].fillna("").astype(str)
-    full_paths = locations + sources
+
+    def _combine_location(loc: str, src: str) -> str:
+        loc_s = loc.strip()
+        src_s = src.strip()
+        if not loc_s:
+            return src_s
+        if loc_s.endswith(("/", "\\", "#", "::")):
+            return loc_s + src_s
+        if "://" in loc_s or "#" in loc_s or "::" in loc_s:
+            return loc_s
+        return loc_s + src_s
+
+    full_paths = pd.Series(
+        [_combine_location(loc, src) for loc, src in zip(locations, sources, strict=True)],
+        index=file_info.index,
+    )
 
     dup_mask = sources.duplicated(keep=False)
     if bool(dup_mask.any()):
@@ -310,7 +326,7 @@ def pretty_print_results(
 
     table: list[tuple[str, ...]] = [("Pass", "Location", "Check", "kwargs", "Notes")]
     for res in result_list:
-        loc_display = getattr(res.location, "_location", res.location)
+        loc_display = redact_url(getattr(res.location, "_location", res.location))
         for idx, check in enumerate(res.checklist):
             if isinstance(check, tuple):
                 checkname = check[0]
@@ -370,7 +386,7 @@ def version_adder(fout: str | pathlib.Path, extension: str | None = None) -> str
         ext = f".{extension.lstrip('.')}"
         if path.suffix.lower() != ext.lower():
             logger.info("Appending {} extension to {}", ext, path)
-            path = path.with_suffix(ext) if path.suffix else pathlib.Path(f"{path}{ext}")
+            path = pathlib.Path(f"{path}{ext}")
 
     candidate = path
     n = 1
@@ -406,7 +422,10 @@ def write_excel_report(
     )
     out_path = pathlib.Path(version_adder(excel_file_name, extension=".xlsx"))
 
-    workbook = xlsxwriter.Workbook(str(out_path))
+    workbook = xlsxwriter.Workbook(
+        str(out_path),
+        {"strings_to_formulas": False, "strings_to_urls": False},
+    )
     worksheet = workbook.add_worksheet("Results")
     header_row = ["Pass", "Severity", "Location", "Check", "kwargs", "Notes"]
     header = [{"header": col} for col in header_row]
@@ -417,7 +436,7 @@ def write_excel_report(
 
     row_idx = 1
     for res in result_list:
-        loc_display = getattr(res.location, "_location", res.location)
+        loc_display = redact_url(getattr(res.location, "_location", res.location))
         for idx, check in enumerate(res.checklist):
             if isinstance(check, tuple):
                 checkname = check[0]

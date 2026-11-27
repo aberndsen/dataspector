@@ -35,6 +35,8 @@ from dataspector._connectors import (
     connect_to_sqlalchemy_url,
     interpolate_env_vars,
     is_pyodbc_connection,
+    quote_odbc_identifier,
+    redact_url,
     resolve_location_with_options,
 )
 from dataspector._reporting import (
@@ -105,8 +107,39 @@ class GenericData:
         self._delim: str | None = None
 
     def __repr__(self) -> str:
-        display_path = self.path if self.path is not None else self._location
-        return f"<GenericData: [{display_path}][{self.engine}][{self.table}]>"
+        display_path = self.path if self.path is not None else redact_url(self._location)
+        display_engine = redact_url(self.engine) if self.engine is not None else None
+        return f"<GenericData: [{display_path}][{display_engine}][{self.table}]>"
+
+    def close(self) -> None:
+        """Dispose any open SQLAlchemy engine pool or ``pyodbc`` connection."""
+        if isinstance(self.engine, Engine):
+            self.engine.dispose()
+        elif is_pyodbc_connection(self.engine):
+            self.engine.close()
+
+    def __enter__(self) -> GenericData:
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self.close()
+
+    def _sql_schema_and_table(self) -> tuple[str | None, str | None]:
+        """Split ``self.table`` into ``(schema_name, table_name)`` for SQL dialects."""
+        if self.table is None:
+            schema_opt = (
+                str(self.reader_options["schema"])
+                if self.reader_options and "schema" in self.reader_options
+                else None
+            )
+            return schema_opt, None
+        schema_name: str | None = None
+        table_name = self.table
+        if "." in self.table:
+            schema_name, table_name = self.table.split(".", 1)
+        elif self.reader_options and "schema" in self.reader_options:
+            schema_name = str(self.reader_options["schema"])
+        return schema_name, table_name
 
     @property
     def columns(self) -> list[Any] | None:
@@ -114,6 +147,14 @@ class GenericData:
         if self._columns is None:
             if isinstance(self.path, coboller.Copybook):
                 self._columns = list(self.path.fields)
+            elif isinstance(self.engine, Engine) and self.table is not None:
+                schema_name, table_name = self._sql_schema_and_table()
+                assert table_name is not None
+                inspector = sa_inspect(self.engine)
+                if inspector.has_table(table_name, schema=schema_name):
+                    self._columns = [
+                        col["name"] for col in inspector.get_columns(table_name, schema=schema_name)
+                    ]
             else:
                 for chunk in self.yield_data(chunksize=2):
                     if isinstance(chunk, pd.DataFrame):
@@ -134,6 +175,15 @@ class GenericData:
                         "cobol://layout.cbl::data.dat."
                     )
                     self._exist = self.path.exists
+            elif isinstance(self.engine, Engine) and self.table is not None:
+                try:
+                    schema_name, table_name = self._sql_schema_and_table()
+                    assert table_name is not None
+                    self._exist = bool(
+                        sa_inspect(self.engine).has_table(table_name, schema=schema_name)
+                    )
+                except Exception:
+                    self._exist = False
             elif self.engine is not None:
                 try:
                     self._exist = self.columns is not None
@@ -193,7 +243,8 @@ class GenericData:
         """List of tables (database) or worksheets (Excel), or ``None`` if not applicable."""
         if self._tables is None:
             if isinstance(self.engine, Engine):
-                self._tables = list(sa_inspect(self.engine).get_table_names())
+                schema_name, _ = self._sql_schema_and_table()
+                self._tables = list(sa_inspect(self.engine).get_table_names(schema=schema_name))
             elif is_pyodbc_connection(self.engine):
                 with self.engine.cursor() as curr:
                     self._tables = [t[2] for t in curr.tables()]
@@ -212,12 +263,8 @@ class GenericData:
         if self._number_of_records is None:
             nrecords = 0
             if isinstance(self.engine, Engine) and self.table is not None:
-                schema_name: str | None = None
-                table_name = self.table
-                if "." in self.table:
-                    schema_name, table_name = self.table.split(".", 1)
-                if self.reader_options and "schema" in self.reader_options and schema_name is None:
-                    schema_name = str(self.reader_options["schema"])
+                schema_name, table_name = self._sql_schema_and_table()
+                assert table_name is not None
                 tbl = Table(table_name, MetaData(), schema=schema_name)
                 stmt = select(func.count()).select_from(tbl)
                 with self.engine.connect() as conn:
@@ -225,7 +272,11 @@ class GenericData:
                     if val is not None:
                         nrecords = int(val)
             elif is_pyodbc_connection(self.engine) and self.table is not None:
-                qry = f"SELECT COUNT(*) AS Nrecords FROM [{self.table}]"
+                known_tables = self.list_of_tables
+                if known_tables is not None and self.table not in known_tables:
+                    raise ValueError(f"Table {self.table!r} not found in ODBC data source.")
+                quoted = quote_odbc_identifier(self.table)
+                qry = f"SELECT COUNT(*) AS Nrecords FROM {quoted}"
                 df = pd.read_sql_query(qry, self.engine)
                 if not df.empty:
                     nrecords = int(df["Nrecords"].iloc[0])
@@ -432,13 +483,17 @@ class GenericData:
 
         if self.engine is not None and self.table is not None:
             if is_pyodbc_connection(self.engine):
-                qry = f"SELECT * FROM [{self.table}]"
+                known_tables = self.list_of_tables
+                if known_tables is not None and self.table not in known_tables:
+                    raise ValueError(f"Table {self.table!r} not found in ODBC data source.")
+                quoted = quote_odbc_identifier(self.table)
+                qry = f"SELECT * FROM {quoted}"
                 yield from pd.read_sql_query(qry, self.engine, chunksize=chunksize, **opts)
             elif isinstance(self.engine, Engine):
-                table_name = self.table
-                if "." in self.table and "schema" not in opts:
-                    schema_part, table_name = self.table.split(".", 1)
-                    opts["schema"] = schema_part
+                schema_name, table_name = self._sql_schema_and_table()
+                assert table_name is not None
+                if schema_name is not None and "schema" not in opts:
+                    opts["schema"] = schema_name
                 yield from pd.read_sql_table(table_name, self.engine, chunksize=chunksize, **opts)
             return
 
@@ -528,8 +583,14 @@ class CheckeredHistory:
         location: str | pathlib.Path | DataSourceSpec | Mapping[str, Any] | GenericData,
         checklist: list[Any] | str,
     ) -> None:
-        gd = location if isinstance(location, GenericData) else GenericData(location)
-        self.location: Any = gd._location
+        if isinstance(location, GenericData):
+            self.location: Any = location._location
+            self.reader_options: dict[str, Any] = (
+                dict(location.reader_options) if location.reader_options else {}
+            )
+        else:
+            self.location = str(location) if isinstance(location, pathlib.Path) else location
+            self.reader_options = {}
         self.checklist: list[Any] = (
             [c.strip() for c in checklist.split(",")]
             if isinstance(checklist, str)
@@ -540,7 +601,6 @@ class CheckeredHistory:
         self.results: dict[int, bool | None] = {}
         self.notes: dict[int, str | None] = {}
         self.exceptions: dict[int, str] = {}
-        self.reader_options: dict[str, Any] = dict(gd.reader_options) if gd.reader_options else {}
 
         rlc = False
         for idx, item in enumerate(self.checklist):
@@ -556,7 +616,7 @@ class CheckeredHistory:
             if this_reader:
                 self.reader_options.update(this_reader)
 
-            if hasattr(checkers, checkname):
+            if checkname in available_checks:
                 self.cheques[idx] = (checkname, this_kwargs)
                 if checkname.startswith("record_") or checkname in checkers.REQUIRES_ALL_DATA:
                     rlc = True
@@ -567,7 +627,7 @@ class CheckeredHistory:
         self._rlc = rlc
 
     def __repr__(self) -> str:
-        return f"<CheckeredHistory: {len(self.checklist)} checks on {self.location}>"
+        return f"<CheckeredHistory: {len(self.checklist)} checks on {redact_url(self.location)}>"
 
     @property
     def all_passed(self) -> bool:
@@ -598,24 +658,25 @@ class CheckeredHistory:
         """
         done: deque[int] = deque()
         last_record: Any = pd.DataFrame()
-        gd = GenericData(self.location, reader_options=self.reader_options)
+        with GenericData(self.location, reader_options=self.reader_options) as gd:
+            for record in gd.yield_data(chunksize=chunksize):
+                last_record = record
+                for idx, (checkname, kwargs) in list(self.cheques.items()):
+                    if not (
+                        checkname.startswith("record_") or checkname in checkers.REQUIRES_ALL_DATA
+                    ):
+                        continue
+                    call_kwargs = dict(kwargs)
+                    if checkname in checkers.REQUIRES_ALL_DATA:
+                        call_kwargs["_last_chunk"] = False
+                    if _run_check(self, idx, checkname, record, **call_kwargs):
+                        done.append(idx)
 
-        for record in gd.yield_data(chunksize=chunksize):
-            last_record = record
-            for idx, (checkname, kwargs) in list(self.cheques.items()):
-                if not (checkname.startswith("record_") or checkname in checkers.REQUIRES_ALL_DATA):
-                    continue
-                call_kwargs = dict(kwargs)
-                if checkname in checkers.REQUIRES_ALL_DATA:
-                    call_kwargs["_last_chunk"] = False
-                if _run_check(self, idx, checkname, record, **call_kwargs):
-                    done.append(idx)
+                while done:
+                    self.cheques.pop(done.pop(), None)
 
-            while done:
-                self.cheques.pop(done.pop(), None)
-
-            if not self.record_level_checks_remain:
-                return
+                if not self.record_level_checks_remain:
+                    return
 
         empty_frame: Any = (
             last_record.iloc[0:0] if isinstance(last_record, pd.DataFrame) else pd.DataFrame()
@@ -634,16 +695,16 @@ class CheckeredHistory:
     def apply_source_level_checks(self) -> None:
         """Execute all pending source-level checks."""
         done: deque[int] = deque()
-        gd = GenericData(self.location, reader_options=self.reader_options)
-        for idx, (checkname, kwargs) in list(self.cheques.items()):
-            if (
-                checkname.startswith("source_")
-                and checkname not in checkers.REQUIRES_ALL_DATA
-                and _run_check(self, idx, checkname, gd, **kwargs)
-            ):
-                done.append(idx)
-        while done:
-            self.cheques.pop(done.pop(), None)
+        with GenericData(self.location, reader_options=self.reader_options) as gd:
+            for idx, (checkname, kwargs) in list(self.cheques.items()):
+                if (
+                    checkname.startswith("source_")
+                    and checkname not in checkers.REQUIRES_ALL_DATA
+                    and _run_check(self, idx, checkname, gd, **kwargs)
+                ):
+                    done.append(idx)
+            while done:
+                self.cheques.pop(done.pop(), None)
 
 
 # ---------------------------------------------------------------------------

@@ -397,13 +397,19 @@ def comp_unpack(
     return scale_integer(int_val, exponent, as_decimal=as_decimal)
 
 
-def expand_pic(pic: str) -> str:
+MAX_PIC_REPEAT: int = 100_000
+
+
+def expand_pic(pic: str, max_repeat: int = MAX_PIC_REPEAT) -> str:
     """Expand repeat counts in a COBOL ``PIC`` string (e.g. ``'S9(5)V9(2)'`` -> ``'S99999V99'``).
 
     Parameters
     ----------
     pic
         Raw COBOL ``PICTURE`` clause string.
+    max_repeat
+        Upper bound on any single repeat factor or expanded string length
+        (guards against memory exhaustion on malformed copybooks).
 
     Returns
     -------
@@ -413,7 +419,13 @@ def expand_pic(pic: str) -> str:
     picstr = pic.strip().upper()
     while (match := PIC_REPEAT.search(picstr)) is not None:
         repeat = int(match.group("repeat"))
+        if repeat > max_repeat:
+            raise ValueError(
+                f"COBOL PIC repeat count {repeat} exceeds maximum allowed ({max_repeat})."
+            )
         section = match.group("section")
+        if len(picstr) + len(section) * repeat > max_repeat:
+            raise ValueError(f"Expanded COBOL PIC length exceeds maximum allowed ({max_repeat}).")
         picstr = PIC_REPEAT.sub(section * repeat, picstr, count=1)
     return picstr
 

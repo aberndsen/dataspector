@@ -52,6 +52,8 @@ from dataspector.coboller.parser import (
     parse_statement,
 )
 
+MAX_LAYOUT_ITEMS: int = 100_000
+
 
 @dataclass(frozen=True, slots=True)
 class ConditionName:
@@ -301,6 +303,10 @@ class Copybook:
                     if isinstance(node, ElementaryItem):
                         col_name = f"{node.name}{suffix}{occ_suffix}"
                         if include_filler or not node.is_filler:
+                            if len(resolved) >= MAX_LAYOUT_ITEMS:
+                                raise ValueError(
+                                    f"COBOL copybook layout exceeds maximum allowed items ({MAX_LAYOUT_ITEMS})."
+                                )
                             resolved.append(
                                 ResolvedItem(
                                     name=col_name,
@@ -719,8 +725,11 @@ class Copybook:
                         yield pd.DataFrame(rows, columns=col_names)
                         rows = []
             else:
+                terminator = b"\r\n" if detected_ending == "crlf" else b"\n"
                 for line in fh:
-                    stripped = line.rstrip(b"\r\n")
+                    stripped = line.removesuffix(terminator)
+                    if detected_ending == "crlf":
+                        stripped = stripped.removesuffix(b"\n")
                     if not stripped:
                         continue
                     rows.append(_parse_record(stripped))
